@@ -1,0 +1,12 @@
+[network]
+name = "testnet"
+stacks_node_rpc_address = "https://api.testnet.hiro.so"
+deployment_fee_rate = 10
+
+[accounts.deployer]
+mnemonic = "REPLACE WITH YOUR 24 WORD SEED PHRASE"
+balance = 100_000_000_000
+
+[accounts.wallet_1]
+mnemonic = "REPLACE WITH A SECOND WALLET SEED PHRASE FOR TESTING"
+balance = 100_000_000_000
