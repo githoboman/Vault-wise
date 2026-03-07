@@ -11,7 +11,7 @@ clarity_version = 2
 epoch = "2.1"
 
 [contracts.vault]
-path = "contracts/vault-mainnet.clar"
+path = "contracts/vault.clar"
 clarity_version = 2
 epoch = "2.1"
 

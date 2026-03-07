@@ -29,7 +29,7 @@
 ;; ~6 months at 10 min/block = 25920 blocks
 (define-constant LOCK-EXPIRY-BLOCKS u25920)
 
-(define-constant SBTC-CONTRACT 'STK705EGH2P9087KBWX34BCYHA8V9CKA4KTA6549.mock-sbtc-token)
+(define-constant SBTC-CONTRACT .mock-sbtc-token)
 
 ;; --- State ---
 
@@ -91,7 +91,7 @@
     (asserts! (> amount u0) ERR-ZERO-AMOUNT)
     (asserts! (is-none (map-get? vaults { owner: caller })) ERR-ALREADY-LOCKED)
 
-    (try! (contract-call? 'STK705EGH2P9087KBWX34BCYHA8V9CKA4KTA6549.mock-sbtc-token transfer
+    (try! (contract-call? .mock-sbtc-token transfer
       amount caller (as-contract tx-sender) none))
 
     (var-set nonce-counter new-nonce)
@@ -172,7 +172,7 @@
     )
 
     (try! (as-contract
-      (contract-call? 'STK705EGH2P9087KBWX34BCYHA8V9CKA4KTA6549.mock-sbtc-token transfer
+      (contract-call? .mock-sbtc-token transfer
         amount (as-contract tx-sender) target-owner none)))
 
     (map-set vaults { owner: target-owner }
