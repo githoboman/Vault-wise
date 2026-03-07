@@ -64,6 +64,8 @@ export default function Dashboard() {
     const [repayAmount, setRepayAmount] = useState("");
     const [loanState, setLoanState] = useState<{ amountBorrowedUSD: string, amountRepaidCents: string } | null>(null);
     const [usdcBalance, setUsdcBalance] = useState("0");
+    const [sbtcBalance, setSbtcBalance] = useState<bigint | null>(null);
+    const [isMinting, setIsMinting] = useState(false);
     const [txLoading, setTxLoading] = useState(false);
 
     const loadPoolData = useCallback(async (tokenId: string) => {
@@ -96,14 +98,36 @@ export default function Dashboard() {
         } catch { }
     }, [evmAddress, loadPoolData]);
 
+    const fetchSbtcBalance = useCallback(async () => {
+        if (!stacksAddress) return;
+        try {
+            const res = await fetch(`https://api.testnet.hiro.so/extended/v1/address/${stacksAddress}/balances`);
+            const data = await res.json();
+            const ftKey = Object.keys(data.fungible_tokens || {}).find(k => k.includes("mock-sbtc-token"));
+            if (ftKey) {
+                setSbtcBalance(BigInt(data.fungible_tokens[ftKey].balance));
+            } else {
+                setSbtcBalance(0n);
+            }
+        } catch (e) {
+            console.error("Failed to fetch sBTC balance", e);
+        }
+    }, [stacksAddress]);
+
     useEffect(() => {
         if (isFullyConnected && stacksAddress && evmAddress) {
             fetch(`${RELAYER}/api/register`, {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ stacksAddress, evmAddress }),
             });
+            fetchSbtcBalance();
         }
-    }, [isFullyConnected, stacksAddress, evmAddress]);
+    }, [isFullyConnected, stacksAddress, evmAddress, fetchSbtcBalance]);
+
+    useEffect(() => {
+        const interval = setInterval(fetchSbtcBalance, 20_000);
+        return () => clearInterval(interval);
+    }, [fetchSbtcBalance]);
 
     useEffect(() => { checkCreditLine(); }, [checkCreditLine]);
 
@@ -121,6 +145,21 @@ export default function Dashboard() {
         }, 30 * 60_000);
     }
 
+    async function waitForStacksTx(txId: string) {
+        setIsMinting(true);
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`https://api.testnet.hiro.so/extended/v1/tx/${txId}`);
+                const data = await res.json();
+                if (data.tx_status === "success" || data.tx_status.startsWith("abort")) {
+                    clearInterval(interval);
+                    setIsMinting(false);
+                    await fetchSbtcBalance();
+                }
+            } catch { }
+        }, 8_000);
+    }
+
     async function handleMint() {
         if (!stacksAddress) return;
         setErrorMsg("");
@@ -129,7 +168,10 @@ export default function Dashboard() {
             functionName: "mint", functionArgs: [uintCV(100_000_000), standardPrincipalCV(stacksAddress)],
             network: STACKS_TESTNET, anchorMode: AnchorMode.Any,
             postConditionMode: PostConditionMode.Deny,
-            onFinish: (data) => { alert("Mint transaction submitted! Please wait for it to confirm on the explorer."); },
+            onFinish: (data) => {
+                setTxId(data.txId);
+                waitForStacksTx(data.txId);
+            },
             onCancel: () => setPhase("idle"),
         });
     }
@@ -137,6 +179,12 @@ export default function Dashboard() {
     async function handleLock() {
         if (!amountBTC || isNaN(parseFloat(amountBTC))) return;
         const sats = Math.floor(parseFloat(amountBTC) * 1e8);
+
+        if (sbtcBalance !== null && sbtcBalance < BigInt(sats)) {
+            setErrorMsg("Insufficient mock sBTC — use the Faucet first");
+            return;
+        }
+
         setPhase("locking"); setErrorMsg("");
         await openContractCall({
             contractAddress: VAULT_ADDR, contractName: VAULT_NAME,
@@ -375,9 +423,17 @@ export default function Dashboard() {
                                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div>
                                         <div className="flex justify-between items-center mb-[-0.5rem]">
-                                            <label className="text-sm font-semibold text-gray-900 dark:text-gray-100 block">Collateral Amount</label>
-                                            <button onClick={handleMint} className="text-xs text-orange-500 hover:text-orange-600 font-bold underline bg-orange-50 dark:bg-orange-900/40 px-2 py-1 rounded-md transition-colors">
-                                                Faucet: Mint 1 Test sBTC
+                                            <div className="flex items-center gap-2">
+                                                <label className="text-sm font-semibold text-gray-900 dark:text-gray-100 block">Collateral Amount</label>
+                                                {sbtcBalance !== null && (
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sbtcBalance >= BigInt(Math.floor(parseFloat(amountBTC || "0") * 1e8)) ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}>
+                                                        Balance: {(Number(sbtcBalance) / 1e8).toFixed(2)} sBTC
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <button onClick={handleMint} disabled={isMinting}
+                                                className="text-xs text-orange-500 hover:text-orange-600 font-bold underline bg-orange-50 dark:bg-orange-900/40 px-2 py-1 rounded-md transition-colors disabled:opacity-50">
+                                                {isMinting ? "Minting..." : "Faucet: Mint 1 Test sBTC"}
                                             </button>
                                         </div>
                                         <div className="relative flex items-center group mt-2">
@@ -389,6 +445,7 @@ export default function Dashboard() {
                                                 <span className="text-sm font-bold text-gray-900 dark:text-gray-100">sBTC</span>
                                             </div>
                                         </div>
+                                        {errorMsg && <p className="text-xs text-red-500 font-bold mt-2 ml-2">{errorMsg}</p>}
                                     </div>
 
                                     {estimated && (
@@ -398,9 +455,12 @@ export default function Dashboard() {
                                         </div>
                                     )}
 
-                                    <button onClick={handleLock}
-                                        className="w-full bg-black text-white hover:bg-[#FF6B00] hover:shadow-lg hover:shadow-orange-500/20 font-bold text-lg py-5 rounded-2xl transition-all duration-300 transform active:scale-[0.98]">
-                                        Lock & Issue Credit
+                                    <button
+                                        onClick={handleLock}
+                                        disabled={isMinting || (sbtcBalance !== null && sbtcBalance < BigInt(Math.floor(parseFloat(amountBTC || "0") * 1e8)))}
+                                        className="w-full bg-black text-white hover:bg-[#FF6B00] hover:shadow-lg hover:shadow-orange-500/20 font-bold text-lg py-5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] disabled:opacity-30 disabled:hover:bg-black disabled:hover:shadow-none"
+                                    >
+                                        {isMinting ? "Waiting for Mint..." : "Lock & Issue Credit"}
                                     </button>
                                 </div>
                             ) : phase === "locking" ? (
