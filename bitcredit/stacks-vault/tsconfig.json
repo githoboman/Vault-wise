@@ -11,6 +11,7 @@
         "esModuleInterop": true
     },
     "include": [
-        "tests/**/*.ts"
+        "tests/**/*.ts",
+        "node_modules/@stacks/clarinet-sdk/vitest-helpers/src/vitest.d.ts"
     ]
 }
