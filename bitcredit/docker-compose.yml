@@ -1,0 +1,16 @@
+services:
+  relayer:
+    build:
+      context: ./bitcredit/relayer
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./bitcredit/relayer/.env
+    ports:
+      - "3001:3001"
+    networks:
+      - bitcredit-network
+
+networks:
+  bitcredit-network:
+    driver: bridge
