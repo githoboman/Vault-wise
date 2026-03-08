@@ -26,6 +26,7 @@ interface CreditLineData {
 const POOL_ABI = [
     "function borrow(uint256 amountUSD) external",
     "function repay(uint256 amountUSD) external",
+    "function closeCreditLine() external",
     "function getLoan(uint256 tokenId) external view returns (tuple(uint256 amountBorrowedUSD, uint256 amountRepaidCents))"
 ];
 
@@ -52,7 +53,7 @@ const CreditcoinLogo = () => (
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Dashboard() {
-    const { stacksAddress, evmAddress, connectStacks, connectEVM, isFullyConnected } = useWallet();
+    const { stacksAddress, evmAddress, connectStacks, connectEVM, disconnect, isFullyConnected } = useWallet();
     const [phase, setPhase] = useState<Phase>("idle");
     const [amountBTC, setAmountBTC] = useState("0.001");
     const [txId, setTxId] = useState("");
@@ -302,7 +303,18 @@ export default function Dashboard() {
                 </Link>
                 <div className="flex flex-row items-center gap-6">
                     <ThemeToggle />
+                    {isFullyConnected && (
+                        <button onClick={disconnect}
+                            className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-full transition-all border border-red-100 dark:border-red-900/30">
+                            Disconnect
+                        </button>
+                    )}
                     <div className="flex items-center gap-2">
+                        <button onClick={async () => { await fetchSbtcBalance(); await checkCreditLine(); }}
+                            title="Refresh Data"
+                            className="p-2 text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-all">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        </button>
                         <span className="text-[10px] uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-sm font-semibold ml-2">
                             Testnet
                         </span>
@@ -366,7 +378,7 @@ export default function Dashboard() {
                                                 <input type="number" min="1" step="1" value={borrowAmount}
                                                     onChange={e => setBorrowAmount(e.target.value)}
                                                     placeholder="Enter USD amount"
-                                                    className="w-full bg-gray-50 border border-transparent focus:border-green-500 focus:bg-white rounded-xl px-4 py-3 text-lg font-bold outline-none transition-colors" />
+                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 focus:border-green-500 focus:bg-white dark:focus:bg-black rounded-xl px-4 py-3 text-lg font-bold outline-none transition-colors text-gray-900 dark:text-white" />
                                             </div>
                                             <button onClick={handleBorrow} disabled={txLoading}
                                                 className="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-green-500/20 disabled:opacity-50">
@@ -391,7 +403,7 @@ export default function Dashboard() {
                                                 <input type="number" min="1" step="1" value={repayAmount}
                                                     onChange={e => setRepayAmount(e.target.value)}
                                                     placeholder="Enter USD amount"
-                                                    className="w-full bg-gray-50 border border-transparent focus:border-orange-500 focus:bg-white rounded-xl px-4 py-3 text-lg font-bold outline-none transition-colors" />
+                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 focus:border-orange-500 focus:bg-white dark:focus:bg-black rounded-xl px-4 py-3 text-lg font-bold outline-none transition-colors text-gray-900 dark:text-white" />
                                             </div>
                                             <button onClick={handleRepay} disabled={txLoading}
                                                 className="bg-black hover:bg-gray-800 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md disabled:opacity-50">
@@ -510,10 +522,17 @@ export default function Dashboard() {
                 {/* Right Column: Statistics / Credit Line */}
                 <div className="md:col-span-2 space-y-6">
                     {/* Minimalist Score Widget */}
-                    <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] flex flex-col justify-between h-full min-h-[220px]">
+                    <div className="bg-white dark:bg-[#111] rounded-[2rem] border border-gray-100 dark:border-white/10 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] flex flex-col justify-between h-full min-h-[220px]">
                         <div>
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">On-Chain Reputation</h3>
-                            <h2 className="text-lg font-semibold text-gray-900">Credit Score</h2>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">On-Chain Reputation</h3>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Credit Score</h2>
+                                </div>
+                                <div className="text-[10px] text-gray-400 font-bold px-2 py-1 bg-gray-50 dark:bg-white/5 rounded-md">
+                                    1 USD REPAID = +1 PT
+                                </div>
+                            </div>
                         </div>
 
                         <div className="my-6">

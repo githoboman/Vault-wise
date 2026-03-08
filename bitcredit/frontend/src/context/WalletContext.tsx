@@ -9,6 +9,7 @@ const userSession = new UserSession({ appConfig });
 interface WalletContextType {
     stacksAddress: string | null; evmAddress: string | null;
     connectStacks: () => void; connectEVM: () => Promise<void>;
+    disconnect: () => void;
     isFullyConnected: boolean;
 }
 
@@ -48,9 +49,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setEvmAddress(accounts[0]);
     }, []);
 
+    const disconnect = useCallback(() => {
+        userSession.signUserOut();
+        setStacksAddress(null);
+        setEvmAddress(null);
+    }, []);
+
     return (
         <WalletContext.Provider value={{
-            stacksAddress, evmAddress, connectStacks, connectEVM,
+            stacksAddress, evmAddress, connectStacks, connectEVM, disconnect,
             isFullyConnected: !!stacksAddress && !!evmAddress,
         }}>
             {children}
