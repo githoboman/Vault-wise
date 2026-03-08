@@ -1,6 +1,7 @@
 import {
     makeContractDeploy,
     AnchorMode,
+    ClarityVersion
 } from "@stacks/transactions";
 import { STACKS_TESTNET } from "@stacks/network";
 import fs from "fs";
@@ -27,6 +28,7 @@ async function deploy(contractName, filePath, fee = 25000) {
         senderKey: privateKey,
         network,
         anchorMode: AnchorMode.Any,
+        clarityVersion: ClarityVersion.Clarity2,
         fee,
         nonce
     };

@@ -66,6 +66,7 @@
       (nonce (+ (var-get nonce-counter) u1))
       (expiry (+ block-height LOCK-EXPIRY-BLOCKS))
       (existing-vault (get-vault caller))
+      (contract-principal (as-contract tx-sender))
     )
     (asserts! (> amount u0) ERR-ZERO-AMOUNT)
     ;; Allow re-locking if No vault exists OR if the existing one is fully released
@@ -73,7 +74,7 @@
 
     ;; Transfer sBTC from user to this contract
     (try! (contract-call? 'ST9NSDHK5969YF6WJ2MRCVVAVTDENWBNTFJRVZ3E.mock-sbtc-token transfer
-      amount caller (as-contract tx-sender) none))
+      amount caller contract-principal none))
 
     ;; Update state
     (map-set vaults
@@ -135,6 +136,7 @@
       (expiry (get expiry-time vault))
       (is-relayer (is-eq tx-sender (var-get authorized-relayer)))
       (is-expired-bool (>= block-height expiry))
+      (contract-principal (as-contract tx-sender))
     )
     ;; Relayer can release anytime; owner can only release after expiry
     (asserts! (or is-relayer (and (is-eq tx-sender target-owner) is-expired-bool)) ERR-LOCK-ACTIVE)
@@ -143,7 +145,7 @@
     ;; Transfer sBTC back to owner
     (try! (as-contract
       (contract-call? 'ST9NSDHK5969YF6WJ2MRCVVAVTDENWBNTFJRVZ3E.mock-sbtc-token transfer
-        amount tx-sender target-owner none)))
+        amount contract-principal target-owner none)))
 
     ;; Mark as released
     (map-set vaults
