@@ -9,14 +9,22 @@ const ABI = [
     "function getActiveCreditLine(address) view returns (tuple(address borrower, string stacksOwner, uint256 collateralSats, uint256 stacksNonce, uint256 creditPowerUSD, uint256 issuedAt, bool active, uint256 loansDisbursed, uint256 totalRepaidCents))"
 ];
 
-async function check() {
-    const provider = new ethers.JsonRpcProvider(RPC);
-    const usc = new ethers.Contract(USC_ADDR, ABI, provider);
+const POOL_ADDR = "0x7F0DDCA9dBC8597218F391aE835750777A55274a";
+const POOL_ABI = ["function bitCreditUSC() view returns (address)"];
 
+async function check() {
     try {
+        const provider = new ethers.JsonRpcProvider(RPC);
+        const usc = new ethers.Contract(USC_ADDR, ABI, provider);
+        const pool = new ethers.Contract(POOL_ADDR, POOL_ABI, provider);
+
+        const storedUsc = await pool.bitCreditUSC();
+        console.log("Pool's Stored USC:", storedUsc);
+
         const tokenId = await usc.activeCreditLine(USER_EVM);
         console.log("Token ID:", tokenId.toString());
-        if (tokenId > 0n) {
+
+        if (tokenId !== 0n) {
             const cl = await usc.getActiveCreditLine(USER_EVM);
             console.log("Credit Line:", JSON.stringify({
                 borrower: cl.borrower,
@@ -26,9 +34,7 @@ async function check() {
                 active: cl.active
             }, null, 2));
         }
-    } catch (e) {
-        console.error("Error:", e.message);
-    }
+    } catch (e) { console.error(e); }
 }
 
 check();

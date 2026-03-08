@@ -8,6 +8,7 @@ const app = express();
 const provider = new ethers.JsonRpcProvider(CONFIG.CREDITCOIN_RPC);
 app.use(cors());
 app.use(express.json());
+app.get("/", (req, res) => res.json({ status: "ok", service: "BitCredit Relayer" }));
 
 const USC_ABI = [
     "function getCreditScore(address) view returns (uint256)",
@@ -27,8 +28,10 @@ app.post("/api/register", (req, res) => {
 
 app.get("/api/credit-line", async (req, res) => {
     const { evmAddress } = req.query as { evmAddress: string };
+    console.log(`API: GET /api/credit-line?evmAddress=${evmAddress}`);
     try {
         const tokenId = await usc.activeCreditLine(evmAddress);
+        console.log(`API: tokenId for ${evmAddress} is ${tokenId}`);
         if (tokenId === 0n) return res.json({ active: false });
         const cl = await usc.getActiveCreditLine(evmAddress);
         const score = await usc.getCreditScore(evmAddress);
