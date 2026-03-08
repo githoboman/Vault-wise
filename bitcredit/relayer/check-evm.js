@@ -1,7 +1,7 @@
 const { ethers } = require("ethers");
 
-const RPC = "https://rpc.testnet.creditcoin.network";
-const USC_ADDR = "0x27A38fe670556FcC1d2539f432E5C12A8FbC513B";
+const RPC = "https://rpc.usc-testnet.creditcoin.network";
+const USC_ADDR = "0xF37130A1869619F027268A5e3E28D60218bcB01f";
 const USER_EVM = "0xf14bc9656c57d265c53da70f9b80453f759c1d27";
 
 const ABI = [
