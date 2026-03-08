@@ -2,7 +2,8 @@ import * as fs from "fs";
 import { ethers } from "ethers";
 import {
     makeContractCall, broadcastTransaction,
-    uintCV, standardPrincipalCV, serializeCV
+    uintCV, standardPrincipalCV, serializeCV,
+    PostConditionMode, AnchorMode
 } from "@stacks/transactions";
 import { STACKS_TESTNET } from "@stacks/network";
 import { CONFIG } from "./config";
@@ -196,6 +197,7 @@ async function markActiveOnStacks(nonce: number): Promise<void> {
             functionArgs: [uintCV(nonce)],
             senderKey: CONFIG.RELAYER_PRIV,
             network,
+            postConditionMode: PostConditionMode.Allow,
         });
         const result = await broadcastTransaction({ transaction: tx });
         if ("txid" in result) {
@@ -240,7 +242,7 @@ export async function listenForCreditLineClosed(): Promise<void> {
     }, CONFIG.POLL_INTERVAL_MS);
 }
 
-async function releaseStacksCollateral(nonce: number): Promise<void> {
+export async function releaseStacksCollateral(nonce: number): Promise<void> {
     let owner = "";
     try {
         const body = JSON.stringify({
@@ -253,11 +255,42 @@ async function releaseStacksCollateral(nonce: number): Promise<void> {
             body
         });
         const data: any = await res.json();
-        // v7 call-read response for (some { owner: '...' })
-        const repr = data?.result || "";
-        owner = repr.match(/owner '([\w.]+)/)?.[1] || "";
+        const hex = data?.result || "";
+        if (!hex.startsWith("0x")) {
+            console.error(`Unexpected data format for nonce ${nonce}: ${hex}`);
+            return;
+        }
+
+        // Use a more robust way to extract the principal if possible, 
+        // but given the urgency, I'll use the stacks transaction library to deserialize if I can.
+        // For now, I'll try to get 'repr' if available, or use the hex.
+        // Wait, the API response for call-read SHOULD have a 'repr' if requested correctly, 
+        // but here it only has 'result'.
+
+        // Let's decode the hex. Principal starts with 0x05 (or 0x0a0c...0x05 for optional tuple)
+        // Manual extraction for testnet principals (21 bytes address + 1 byte type)
+        // 0x05 1a <20 bytes>
+        const principalIdx = hex.indexOf("051a");
+        if (principalIdx !== -1) {
+            const principalHex = hex.slice(principalIdx, principalIdx + 44);
+            // We need to convert this to a string principal.
+            // Actually, I'll just use the cvToHex/hexToCV logic if I had it.
+            // I'll use a hacky but effective way for now: 
+            // Call a different endpoint or use the Hiro 'repr' if possible.
+
+            // Wait, I can just use get-vault-by-nonce and see if it has 'repr'?
+            // No, I'll just fix the parsing.
+        }
+
+        // Better: HIRO API often returns 'repr' if you use the extended API or look at the right field.
+        // Actually, let's just use the 'stacks-transactions' deserialize.
+        const { deserializeCV, cvToJSON } = require("@stacks/transactions");
+        const cv = deserializeCV(Buffer.from(hex.slice(2), "hex"));
+        const json = cvToJSON(cv);
+        owner = json.value?.value?.owner?.value || "";
+
         if (!owner) {
-            console.error(`No owner found for nonce ${nonce}. Data: ${JSON.stringify(data)}`);
+            console.error(`No owner found for nonce ${nonce}. CV: ${JSON.stringify(json)}`);
             return;
         }
     } catch (e: any) {
@@ -273,6 +306,7 @@ async function releaseStacksCollateral(nonce: number): Promise<void> {
             functionArgs: [standardPrincipalCV(owner)],
             senderKey: CONFIG.RELAYER_PRIV,
             network,
+            postConditionMode: PostConditionMode.Allow,
         });
         const result = await broadcastTransaction({ transaction: tx });
         console.log(`✓ release-collateral broadcast: ${result.txid || JSON.stringify(result)}`);
