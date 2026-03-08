@@ -43,14 +43,25 @@ async function deploy(contractName, filePath, fee = 25000) {
     });
 
     const resultText = await res.text();
+    console.log(`Node Response: ${resultText}`);
+
     if (!res.ok) {
         throw new Error(`Broadcast failed with status ${res.status}: ${resultText}`);
     }
 
-    const result = JSON.parse(resultText);
-    console.log(`✓ Vault-v3 broadcasted! TXID: ${result.txid}`);
-    console.log(`  Explorer Link: https://explorer.hiro.so/txid/${result.txid}?chain=testnet`);
-    return result.txid;
+    // The Hiro V2 API usually returns the txid directly or as text 
+    // depending on the proxy. Let's handle both.
+    let txid;
+    try {
+        const result = JSON.parse(resultText);
+        txid = result.txid || result;
+    } catch {
+        txid = resultText.replace(/\"/g, '');
+    }
+
+    console.log(`✓ Vault-v3 broadcasted! TXID: ${txid}`);
+    console.log(`  Explorer Link: https://explorer.hiro.so/txid/${txid}?chain=testnet`);
+    return txid;
 }
 
 async function run() {
