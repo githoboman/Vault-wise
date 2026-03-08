@@ -13,8 +13,8 @@
 (define-constant ERR-NOT-AUTHORIZED   (err u105))
 (define-constant ERR-RELEASE-FAILED   (err u106))
 
-;; ~6 months duration
-(define-constant LOCK-EXPIRY-SECONDS u15552000)
+;; ~6 months duration (10 min/block)
+(define-constant LOCK-EXPIRY-BLOCKS u25920)
 
 ;; SBTC-CONTRACT is inlined below
 
@@ -64,10 +64,12 @@
     (
       (caller tx-sender)
       (nonce (+ (var-get nonce-counter) u1))
-      (expiry (+ block-height LOCK-EXPIRY-SECONDS))
+      (expiry (+ block-height LOCK-EXPIRY-BLOCKS))
+      (existing-vault (get-vault caller))
     )
     (asserts! (> amount u0) ERR-ZERO-AMOUNT)
-    (asserts! (is-none (get-vault caller)) ERR-ALREADY-LOCKED)
+    ;; Allow re-locking if No vault exists OR if the existing one is fully released
+    (asserts! (or (is-none existing-vault) (get released (unwrap-panic existing-vault))) ERR-ALREADY-LOCKED)
 
     ;; Transfer sBTC from user to this contract
     (try! (contract-call? 'ST9NSDHK5969YF6WJ2MRCVVAVTDENWBNTFJRVZ3E.mock-sbtc-token transfer

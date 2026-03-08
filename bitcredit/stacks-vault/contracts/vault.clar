@@ -87,9 +87,11 @@
       (new-nonce (+ (var-get nonce-counter) u1))
       (now       burn-block-height)
       (expiry    (+ now LOCK-EXPIRY-BLOCKS))
+      (existing-vault (get-vault caller))
     )
     (asserts! (> amount u0) ERR-ZERO-AMOUNT)
-    (asserts! (is-none (map-get? vaults { owner: caller })) ERR-ALREADY-LOCKED)
+    ;; Allow re-locking if No vault exists OR if the existing one is fully released
+    (asserts! (or (is-none existing-vault) (get released (unwrap-panic existing-vault))) ERR-ALREADY-LOCKED)
 
     (try! (contract-call? .mock-sbtc-token transfer
       amount caller (as-contract tx-sender) none))

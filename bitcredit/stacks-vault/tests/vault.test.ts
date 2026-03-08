@@ -368,4 +368,21 @@ describe("full lifecycle", () => {
         expect(vaultData(user1)["credit-active"]).toEqual(Cl.bool(false));
     });
 
+    it("allows re-locking after a previous vault has been released", () => {
+        const { deployer, wallet_1: user1 } = accs();
+        mintSbtc(user1, ONE_SBTC * 2, deployer);
+
+        // First lock
+        lock(SMALL_SBTC, user1);
+        // Release first lock
+        simnet.callPublicFn(VAULT, "release-collateral", [Cl.standardPrincipal(user1)], deployer);
+        expect(vaultData(user1).released).toEqual(Cl.bool(true));
+
+        // Second lock (should now succeed)
+        const result2 = lock(SMALL_SBTC, user1);
+        expect(result2.result).toBeOk(Cl.uint(2));
+        expect(vaultData(user1).nonce).toEqual(Cl.uint(2));
+        expect(vaultData(user1).released).toEqual(Cl.bool(false));
+    });
+
 });
