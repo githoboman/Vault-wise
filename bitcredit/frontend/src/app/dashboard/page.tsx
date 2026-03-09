@@ -394,259 +394,323 @@ export default function Dashboard() {
             </header>
 
             {/* Main Content Dashboard */}
-            <div className="max-w-4xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-5 gap-10">
+            <div className="max-w-6xl mx-auto px-6 py-12 space-y-8">
 
-                {/* Left Column: Action Card */}
-                <div className="md:col-span-3 space-y-6">
-                    <div className="mb-8">
+                {/* 1. Header Section with Transitions */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-2">
                         {phase === "active" ? (
                             <>
-                                <h1 className="text-4xl font-extrabold tracking-tight mb-2 dark:text-white">Liquidity Treasury</h1>
-                                <p className="text-gray-500 dark:text-gray-400 text-lg">Your Stacks collateral has been activated. You may now borrow Mock USDC against your Credit Power limit.</p>
+                                <h1 className="text-4xl font-extrabold tracking-tight dark:text-white">Active Credit Line</h1>
+                                <p className="text-gray-500 dark:text-gray-400 text-lg max-w-xl">
+                                    Manage your liquidity across Stacks and Creditcoin. Your Bitcoin collateral is secure.
+                                </p>
                             </>
                         ) : (
                             <>
-                                <h1 className="text-4xl font-extrabold tracking-tight mb-2">Unlock Liquid Credit.</h1>
-                                <p className="text-gray-500 text-lg">Deposit Stacks Bitcoin collateral to instantly mint Creditcoin lending power.</p>
+                                <h1 className="text-4xl font-extrabold tracking-tight">Vault Terminal</h1>
+                                <p className="text-gray-500 text-lg">Cross-chain liquidity powered by Bitcoin collateral.</p>
                             </>
                         )}
                     </div>
 
-                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
-                        <div className="p-8 space-y-8">
-                            {isInitialLoading && isFullyConnected ? (
-                                <div className="text-center py-16 animate-pulse">
-                                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-4"></div>
-                                    <p className="text-gray-400 font-medium">Synchronizing with blockchain...</p>
-                                </div>
-                            ) : !isFullyConnected ? (
-                                <div className="text-center py-12 space-y-6">
-                                    <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                                    </div>
-                                    <h3 className="text-xl font-bold">Connect Wallets</h3>
-                                    <p className="text-gray-500 text-sm max-w-xs mx-auto">Please connect both your Leather and MetaMask wallets to establish the cross-chain bridge.</p>
-                                </div>
-                            ) : phase === "active" && creditLine ? (
-                                <div className="space-y-8 animate-in fade-in zoom-in duration-500">
-                                    {/* Borrow Section */}
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-sm font-bold text-gray-900">Borrow USDC</label>
-                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                                Available: ${(parseInt(creditLine.creditPowerUSD) - (loanState ? parseInt(loanState.amountBorrowedUSD) : 0)).toLocaleString()}
-                                            </span>
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <div className="relative flex-1">
-                                                <input type="number" min="1" step="1" value={borrowAmount}
-                                                    onChange={e => setBorrowAmount(e.target.value)}
-                                                    placeholder="Enter USD amount"
-                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 focus:border-green-500 focus:bg-white dark:focus:bg-black rounded-xl px-4 py-3 text-lg font-bold outline-none transition-colors text-gray-900 dark:text-white" />
-                                            </div>
-                                            <button onClick={handleBorrow} disabled={txLoading}
-                                                className="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-green-500/20 disabled:opacity-50">
-                                                Withdraw
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Divider */}
-                                    <div className="h-px w-full bg-gray-100"></div>
-
-                                    {/* Repay Section */}
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-sm font-bold text-gray-900">Repay Loan</label>
-                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                                Wallet Balance: {usdcBalance} mUSDC
-                                            </span>
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <div className="relative flex-1">
-                                                <input type="number" min="1" step="1" value={repayAmount}
-                                                    onChange={e => setRepayAmount(e.target.value)}
-                                                    placeholder="Enter USD amount"
-                                                    className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 focus:border-orange-500 focus:bg-white dark:focus:bg-black rounded-xl px-4 py-3 text-lg font-bold outline-none transition-colors text-gray-900 dark:text-white" />
-                                            </div>
-                                            <button onClick={handleRepay} disabled={txLoading}
-                                                className="bg-black hover:bg-gray-800 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md disabled:opacity-50">
-                                                Repay
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Divider for Vault Closure */}
-                                    {loanState?.amountBorrowedUSD === "0" && (
-                                        <>
-                                            <div className="h-px w-full bg-gray-100 mt-8 mb-4"></div>
-                                            <div className="bg-orange-50 rounded-xl p-4 border border-orange-100 flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-bold text-gray-900">Debt Settled.</p>
-                                                    <p className="text-xs text-gray-500 mt-1">You may close this line to unlock your sBTC.</p>
-                                                </div>
-                                                <button onClick={handleCloseVault} disabled={txLoading}
-                                                    className="bg-white border border-gray-200 text-black hover:border-black font-bold px-4 py-2 text-sm rounded-lg transition-all shadow-sm disabled:opacity-50">
-                                                    Close Vault & Withdraw
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {txLoading && <p className="text-sm text-center text-orange-500 font-bold animate-pulse mt-4">Confirming Transaction in MetaMask...</p>}
-                                </div>
-                            ) : phase === "idle" ? (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                    <div>
-                                        <div className="flex justify-between items-center mb-[-0.5rem]">
-                                            <div className="flex items-center gap-2">
-                                                <label className="text-sm font-semibold text-gray-900 dark:text-gray-100 block">Collateral Amount</label>
-                                                {sbtcBalance !== null && (
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sbtcBalance >= BigInt(Math.floor(parseFloat(amountBTC || "0") * 1e8)) ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"}`}>
-                                                        Balance: {(Number(sbtcBalance) / 1e8).toFixed(2)} sBTC
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <button onClick={handleMint} disabled={isMinting}
-                                                className="text-xs text-orange-500 hover:text-orange-600 font-bold underline bg-orange-50 dark:bg-orange-900/40 px-2 py-1 rounded-md transition-colors disabled:opacity-50">
-                                                {isMinting ? "Minting..." : "Faucet: Mint 1 Test sBTC"}
-                                            </button>
-                                        </div>
-                                        <div className="relative flex items-center group mt-2">
-                                            <input type="number" min="0.0001" step="0.0001" value={amountBTC}
-                                                onChange={e => setAmountBTC((e.target as HTMLInputElement).value)}
-                                                className="w-full bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#222] border border-transparent dark:border-white/10 focus:border-orange-500 dark:focus:border-orange-500 focus:bg-white dark:focus:bg-black rounded-2xl px-6 py-5 text-2xl font-bold text-gray-900 dark:text-white transition-all duration-300 outline-none" />
-                                            <div className="absolute right-4 flex items-center gap-2 bg-white dark:bg-[#2a2a2a] px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 shadow-sm pointer-events-none">
-                                                <span className="text-[#5546FF] dark:text-[#786cff]"><StacksLogo /></span>
-                                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">sBTC</span>
-                                            </div>
-                                        </div>
-                                        {errorMsg && <p className="text-xs text-red-500 font-bold mt-2 ml-2">{errorMsg}</p>}
-                                    </div>
-
-                                    {estimated && (
-                                        <div className="flex justify-between items-center py-4 border-t border-b border-gray-100">
-                                            <span className="text-sm text-gray-500 font-medium">Est. Credit Power (70% LTV)</span>
-                                            <span className="text-xl font-bold">${estimated} <span className="text-gray-400 text-sm">USD</span></span>
-                                        </div>
-                                    )}
-
-                                    <button
-                                        onClick={handleLock}
-                                        disabled={isMinting || (sbtcBalance !== null && sbtcBalance < BigInt(Math.floor(parseFloat(amountBTC || "0") * 1e8)))}
-                                        className="w-full bg-black text-white hover:bg-[#FF6B00] hover:shadow-lg hover:shadow-orange-500/20 font-bold text-lg py-5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] disabled:opacity-30 disabled:hover:bg-black disabled:hover:shadow-none"
-                                    >
-                                        {isMinting ? "Waiting for Mint..." : "Lock & Issue Credit"}
-                                    </button>
-                                </div>
-                            ) : phase === "locking" ? (
-                                <div className="text-center py-16 animate-in zoom-in duration-300">
-                                    <div className="w-16 h-16 animate-spin rounded-full border-4 border-gray-100 border-t-black mx-auto mb-6"></div>
-                                    <h3 className="text-xl font-bold">Sign Transaction</h3>
-                                    <p className="text-gray-500 mt-2">Please confirm the Stacks deposit in your wallet.</p>
-                                </div>
-                            ) : phase === "attesting" ? (
-                                <div className="text-center py-16 animate-in fade-in duration-500">
-                                    <div className="flex justify-center gap-2 mb-6">
-                                        <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0s" }}></div>
-                                        <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }}></div>
-                                        <div className="w-3 h-3 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }}></div>
-                                    </div>
-                                    <h3 className="text-xl font-bold dark:text-white">Cross-Chain Attestation</h3>
-                                    <p className="text-gray-500 dark:text-gray-400 mt-2">Waiting for Creditcoin validators to mint your USC...</p>
-                                    {txId && (
-                                        <a href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`} target="_blank" rel="noreferrer"
-                                            className="inline-block mt-4 text-sm font-medium text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors">
-                                            View Stacks Tx ↗
-                                        </a>
-                                    )}
-                                </div>
-                            ) : phase === "closing" ? (
-                                <div className="text-center py-16 animate-in fade-in duration-500">
-                                    <div className="flex justify-center gap-2 mb-6">
-                                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0s" }}></div>
-                                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.15s" }}></div>
-                                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.3s" }}></div>
-                                    </div>
-                                    <h3 className="text-xl font-bold">Settling Credit Line & Returning Collateral</h3>
-                                    <p className="text-gray-500 mt-2">Relaying closure directly to the Stacks network to unlock your sBTC...</p>
-                                </div>
-                            ) : phase === "error" ? (
-                                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">✕</div>
-                                    <h3 className="text-lg font-bold text-gray-900">Deployment Failed</h3>
-                                    <p className="text-gray-500 text-sm mt-2 mb-6">{errorMsg}</p>
-                                    <button onClick={() => setPhase("idle")} className="text-sm font-bold bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition-colors">Try Again</button>
-                                </div>
-                            ) : null}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Statistics / Credit Line */}
-                <div className="md:col-span-2 space-y-6">
-                    {/* Minimalist Score Widget */}
-                    <div className="bg-white dark:bg-[#111] rounded-[2rem] border border-gray-100 dark:border-white/10 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)] flex flex-col justify-between h-full min-h-[220px]">
-                        <div>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">On-Chain Reputation</h3>
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Credit Score</h2>
-                                </div>
-                                <div className="text-[10px] text-gray-400 font-bold px-2 py-1 bg-gray-50 dark:bg-white/5 rounded-md">
-                                    1 USD REPAID = +1 PT
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="my-6">
-                            <div className={`text-6xl font-black tracking-tighter ${scoreColor}`}>
-                                {score ?? "—"}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
-                                {score && (
-                                    <div className="h-full bg-black rounded-full transition-all duration-1000 ease-out"
-                                        style={{ width: `${((score - 300) / 550) * 100}%` }} />
-                                )}
-                            </div>
-                            <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
-                                <span>Risk Area</span>
-                                <span>Excellent</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Active Credit Line Widget */}
                     {phase === "active" && creditLine && (
-                        <div className="bg-black text-white rounded-[2rem] p-8 shadow-xl shadow-black/10 animate-in slide-in-from-right-8 duration-500">
-                            <div className="flex justify-between items-start mb-8">
-                                <div>
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Active Vault</h3>
-                                    <h2 className="text-lg font-semibold text-white">Credit Power</h2>
-                                </div>
-                                <div className="w-8 h-8 bg-[#FF6B00] rounded-full flex items-center justify-center">
-                                    <CreditcoinLogo />
-                                </div>
+                        <div className="flex items-center gap-4 bg-orange-50 dark:bg-orange-900/20 px-4 py-2 rounded-2xl border border-orange-100 dark:border-orange-900/30">
+                            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+                                <CreditcoinLogo />
                             </div>
-
-                            <p className="text-4xl font-black mb-2">${parseInt(creditLine.creditPowerUSD).toLocaleString()}</p>
-                            <p className="text-sm text-gray-400 mb-8 border-b border-gray-800 pb-8">{(parseInt(creditLine.collateralSats) / 1e8).toFixed(4)} sBTC Locked</p>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Borrowed</p>
-                                    <p className="text-xl font-bold mt-1 text-red-400">${loanState?.amountBorrowedUSD || "0"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Repaid</p>
-                                    <p className="text-xl font-bold text-[#FF6B00] mt-1">${(parseInt(creditLine.totalRepaidCents) / 100).toLocaleString()}</p>
-                                </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-widest">NFT ID</p>
+                                <p className="text-sm font-black text-gray-900 dark:text-white">#{creditLine.tokenId}</p>
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* 2. Financial Summary Bar (Only shown when active) */}
+                {phase === "active" && creditLine && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 duration-700">
+                        {/* Available Credit */}
+                        <div className="bg-white dark:bg-[#111] rounded-3xl border border-gray-100 dark:border-white/10 p-6 shadow-sm flex items-center justify-between group hover:border-black dark:hover:border-white transition-all cursor-default">
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Available to Borrow</p>
+                                <p className="text-3xl font-black text-black dark:text-white">
+                                    ${(parseInt(creditLine.creditPowerUSD) - (loanState ? parseInt(loanState.amountBorrowedUSD) : 0)).toLocaleString()}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                            </div>
+                        </div>
+
+                        {/* Current Debt */}
+                        <div className="bg-white dark:bg-[#111] rounded-3xl border border-gray-100 dark:border-white/10 p-6 shadow-sm flex items-center justify-between group hover:border-red-500 transition-all cursor-default">
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Borrowed</p>
+                                <p className="text-3xl font-black text-red-500">
+                                    ${loanState?.amountBorrowedUSD || "0"}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                        </div>
+
+                        {/* Wallet Balance */}
+                        <div className="bg-black dark:bg-[#1a1a1a] rounded-3xl p-6 shadow-xl flex items-center justify-between group cursor-default">
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">USDC Balance</p>
+                                <p className="text-3xl font-black text-white">
+                                    {usdcBalance}
+                                </p>
+                            </div>
+                            <div className="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
+                                <span className="font-bold text-xs">$</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 items-start">
+
+                    {/* Left/Main Column: Actions */}
+                    <div className="lg:col-span-4 space-y-8">
+                        {isInitialLoading && isFullyConnected ? (
+                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-16 text-center shadow-lg animate-pulse">
+                                <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full mx-auto mb-6 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full border-4 border-black/10 dark:border-white/10 border-t-black dark:border-t-white animate-spin"></div>
+                                </div>
+                                <h3 className="text-2xl font-bold dark:text-white">Synchronizing System</h3>
+                                <p className="text-gray-400 mt-2">Connecting to decentralized credit graph...</p>
+                            </div>
+                        ) : !isFullyConnected ? (
+                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-16 text-center shadow-lg flex flex-col items-center justify-center gap-8">
+                                <div className="w-24 h-24 bg-orange-50 dark:bg-orange-900/10 text-orange-500 rounded-full flex items-center justify-center shadow-inner">
+                                    <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15L12 9M12 9L9 12M12 9L15 12M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" /></svg>
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-3xl font-black">Connection Required</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 text-lg max-w-sm mx-auto">Link both wallets to view your cross-chain vaults and manage credit lines.</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={connectStacks} className="px-8 py-3 bg-gray-100 dark:bg-white/5 rounded-2xl font-bold hover:bg-gray-200 transition-colors">Connect Stacks</button>
+                                    <button onClick={connectEVM} className="px-8 py-3 bg-black text-white dark:bg-white dark:text-black rounded-2xl font-bold hover:opacity-90 transition-opacity">Connect EVM</button>
+                                </div>
+                            </div>
+                        ) : phase === "active" && creditLine ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in duration-1000">
+                                {/* Borrow Card */}
+                                <div className="bg-white dark:bg-[#111] rounded-[2rem] border border-gray-100 dark:border-white/10 p-8 shadow-sm hover:shadow-xl transition-all group">
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className="w-12 h-12 bg-green-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20">
+                                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold dark:text-white tracking-tight">Withdraw Funds</h3>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Borrow Mock USDC</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="relative">
+                                            <input type="number" min="1" step="1" value={borrowAmount}
+                                                onChange={e => setBorrowAmount(e.target.value)}
+                                                placeholder="0.00"
+                                                className="w-full bg-gray-50 dark:bg-black/50 border-2 border-transparent focus:border-green-500 rounded-2xl px-6 py-4 text-2xl font-black outline-none transition-all dark:text-white" />
+                                            <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-gray-300 dark:text-gray-700">USDC</span>
+                                        </div>
+
+                                        <button onClick={handleBorrow} disabled={txLoading || !borrowAmount}
+                                            className="w-full bg-green-500 hover:bg-green-600 dark:hover:bg-green-400 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-green-500/10 active:scale-[0.98] disabled:opacity-20 flex items-center justify-center gap-2">
+                                            {txLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white animate-spin rounded-full"></div> : "Execute Withdrawal"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Repay Card */}
+                                <div className="bg-white dark:bg-[#111] rounded-[2rem] border border-gray-100 dark:border-white/10 p-8 shadow-sm hover:shadow-xl transition-all group">
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className="w-12 h-12 bg-black dark:bg-white text-white dark:text-black rounded-2xl flex items-center justify-center shadow-lg dark:shadow-white/5">
+                                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold dark:text-white tracking-tight">Repay Debt</h3>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Settle Credit Line</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="relative">
+                                            <input type="number" min="1" step="1" value={repayAmount}
+                                                onChange={e => setRepayAmount(e.target.value)}
+                                                placeholder="0.00"
+                                                className="w-full bg-gray-50 dark:bg-black/50 border-2 border-transparent focus:border-black dark:focus:border-white rounded-2xl px-6 py-4 text-2xl font-black outline-none transition-all dark:text-white" />
+                                            <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-gray-300 dark:text-gray-700">USDC</span>
+                                        </div>
+
+                                        <button onClick={handleRepay} disabled={txLoading || !repayAmount}
+                                            className="w-full bg-black dark:bg-white text-white dark:text-black font-black py-4 rounded-2xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-20 flex items-center justify-center gap-2">
+                                            {txLoading ? <div className="w-5 h-5 border-2 border-gray-500 border-t-black animate-spin rounded-full"></div> : "Execute Repayment"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Closure Action if debt settled */}
+                                {loanState?.amountBorrowedUSD === "0" && (
+                                    <div className="md:col-span-2 bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6 animate-in zoom-in duration-500">
+                                        <div className="space-y-2 text-center md:text-left">
+                                            <h3 className="text-xl font-black text-orange-600 dark:text-orange-400 tracking-tight">Vault Ready for Closure</h3>
+                                            <p className="text-gray-600 dark:text-gray-400 max-w-md">Your debt is fully settled. Closing this vault will instantly release your sBTC collateral back to your Stacks wallet.</p>
+                                        </div>
+                                        <button onClick={handleCloseVault} disabled={txLoading}
+                                            className="whitespace-nowrap bg-orange-500 hover:bg-orange-600 text-white font-black px-8 py-4 rounded-2xl transition-all shadow-lg shadow-orange-500/20 active:scale-[0.95] disabled:opacity-50">
+                                            Close & Withdraw sBTC
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : phase === "idle" ? (
+                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-12 shadow-sm space-y-10 animate-in fade-in duration-500">
+                                <div className="flex items-center justify-between border-b dark:border-white/5 pb-8">
+                                    <h3 className="text-2xl font-black dark:text-white">Deposit Collateral</h3>
+                                    <button onClick={handleMint} disabled={isMinting}
+                                        className="text-xs font-black uppercase tracking-widest text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 px-4 py-2 rounded-full border border-orange-200 dark:border-orange-800 transition-all disabled:opacity-30">
+                                        {isMinting ? "Minting..." : "Get Test sBTC"}
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between px-2">
+                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Amount to Lock</label>
+                                            {sbtcBalance !== null && (
+                                                <span className="text-xs font-bold text-gray-500">Wallet: {(Number(sbtcBalance) / 1e8).toFixed(4)} sBTC</span>
+                                            )}
+                                        </div>
+                                        <div className="relative group">
+                                            <input type="number" min="0.0001" step="0.0001" value={amountBTC}
+                                                onChange={e => setAmountBTC(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-black/50 border-2 border-transparent focus:border-orange-500 rounded-2xl px-8 py-6 text-4xl font-black outline-none transition-all dark:text-white" />
+                                            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-2 bg-white dark:bg-[#222] px-4 py-2 rounded-xl shadow-sm border dark:border-white/10">
+                                                <span className="text-[#5546FF]"><StacksLogo /></span>
+                                                <span className="font-black text-sm">sBTC</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {estimated && (
+                                        <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-6 flex justify-between items-center">
+                                            <span className="text-gray-500 font-bold">Estimated Credit Power (70% LTV)</span>
+                                            <span className="text-2xl font-black dark:text-white">${estimated}</span>
+                                        </div>
+                                    )}
+
+                                    {errorMsg && <p className="text-sm font-black text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl flex items-center gap-2">⚠️ {errorMsg}</p>}
+
+                                    <button onClick={handleLock}
+                                        disabled={isMinting || (sbtcBalance !== null && sbtcBalance < BigInt(Math.floor(parseFloat(amountBTC || "0") * 1e8)))}
+                                        className="w-full bg-black dark:bg-white text-white dark:text-black font-black text-xl py-6 rounded-[2rem] transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl disabled:opacity-20">
+                                        Create Vault & Establish Credit
+                                    </button>
+                                </div>
+                            </div>
+                        ) : phase === "attesting" ? (
+                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-16 text-center shadow-lg space-y-8 animate-in zoom-in duration-500">
+                                <div className="flex justify-center gap-3">
+                                    <div className="w-4 h-4 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0s" }}></div>
+                                    <div className="w-4 h-4 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                                    <div className="w-4 h-4 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="text-3xl font-black tracking-tight dark:text-white">Validation in Progress</h3>
+                                    <p className="text-gray-500 dark:text-gray-400 text-lg">Cross-chain validators are certifying your Bitcoin deposit on Creditcoin.</p>
+                                </div>
+                                {txId && (
+                                    <a href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`} target="_blank" rel="noreferrer"
+                                        className="inline-block font-black text-orange-500 hover:underline">
+                                        Track Stacks Transaction ↗
+                                    </a>
+                                )}
+                            </div>
+                        ) : (
+                            /* Other phases simplified */
+                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] p-16 text-center shadow-lg">
+                                <div className="w-16 h-16 border-4 border-black/10 border-t-black rounded-full animate-spin mx-auto mb-6"></div>
+                                <h3 className="text-xl font-bold uppercase tracking-widest">{phase}...</h3>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column: Reputation & Stats */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Status Card */}
+                        <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-3 shadow-sm">
+                            <div className={`rounded-[1.8rem] p-8 ${phase === 'active' ? 'bg-green-500 text-white' : 'bg-orange-50 dark:bg-white/5 text-gray-900 dark:text-white'}`}>
+                                <div className="flex justify-between items-center mb-8">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest opacity-60">System Status</h4>
+                                    <div className={`w-2 h-2 rounded-full animate-pulse ${phase === 'active' ? 'bg-white' : 'bg-orange-500'}`}></div>
+                                </div>
+                                <p className="text-3xl font-black tracking-tight leading-none uppercase">
+                                    {phase === "active" ? "Operational" :
+                                        phase === "attesting" ? "Synchronizing" :
+                                            phase === "idle" ? "Ready" : phase}
+                                </p>
+                                <p className="text-xs font-bold mt-2 opacity-60">
+                                    {phase === "active" ? "Protocol synced via Creditcoin L1" : "Awaiting user collateral deposit"}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Credit Score Card */}
+                        <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-8 shadow-sm space-y-8">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">On-Chain Reputation</h3>
+                                    <p className="text-xl font-black dark:text-white">Credit Score</p>
+                                </div>
+                                <div className="w-10 h-10 bg-gray-50 dark:bg-white/5 rounded-xl flex items-center justify-center text-gray-400">
+                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                </div>
+                            </div>
+
+                            <div className={`text-7xl font-black tracking-tighter text-center ${scoreColor}`}>
+                                {score ?? "—"}
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="w-full h-3 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                    {score && (
+                                        <div className="h-full bg-black dark:bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,0,0,0.1)]"
+                                            style={{ width: `${((score - 300) / 550) * 100}%` }} />
+                                    )}
+                                </div>
+                                <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+                                    <span>Subprime</span>
+                                    <span>Prime</span>
+                                    <span>Super Prime</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Collateral Detail */}
+                        {phase === "active" && creditLine && (
+                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-8 shadow-sm">
+                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Security Layer</h3>
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-[#5546FF]">
+                                        <StacksLogo />
+                                    </div>
+                                    <div>
+                                        <p className="text-xl font-black dark:text-white leading-none">{(parseInt(creditLine.collateralSats) / 1e8).toFixed(4)} sBTC</p>
+                                        <p className="text-xs font-bold text-gray-500 mt-1">Locked in Stacks Ledger</p>
+                                    </div>
+                                </div>
+                                <div className="text-[10px] font-bold text-gray-400 bg-gray-50 dark:bg-white/5 p-4 rounded-xl leading-relaxed">
+                                    Collateral is non-custodial and cryptographically locked on Bitcoin L2 until debt is settled on Creditcoin.
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
