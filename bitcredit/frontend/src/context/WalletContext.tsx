@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { AppConfig, UserSession, authenticate } from "@stacks/connect";
 import { ethers } from "ethers";
 
@@ -36,14 +36,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         if (!eth) { alert("MetaMask not found."); return; }
         const p = new ethers.BrowserProvider(eth);
         try {
-            await p.send("wallet_switchEthereumChain", [{ chainId: "0x18E91" }]);
-        } catch {
-            await p.send("wallet_addEthereumChain", [{
-                chainId: "0x18E91", chainName: "Creditcoin USC Testnet",
-                rpcUrls: ["https://rpc.usc-testnet.creditcoin.network"],
-                nativeCurrency: { name: "tCTC", symbol: "tCTC", decimals: 18 },
-                blockExplorerUrls: ["https://explorer.usc-testnet.creditcoin.network/"],
-            }]);
+            await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x18E91" }] });
+        } catch (err: any) {
+            if (err.code === 4902) {
+                await eth.request({
+                    method: "wallet_addEthereumChain",
+                    params: [{
+                        chainId: "0x18E91", chainName: "Creditcoin USC Testnet",
+                        rpcUrls: ["https://rpc.usc-testnet.creditcoin.network"],
+                        nativeCurrency: { name: "tCTC", symbol: "tCTC", decimals: 18 },
+                        blockExplorerUrls: ["https://explorer.usc-testnet.creditcoin.network/"],
+                    }]
+                });
+            }
         }
         const accounts = await p.send("eth_requestAccounts", []);
         setEvmAddress(accounts[0]);
@@ -54,6 +59,27 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setStacksAddress(null);
         setEvmAddress(null);
     }, []);
+
+    const onAccountChange = useCallback((accounts: string[]) => {
+        if (accounts.length > 0) setEvmAddress(accounts[0]);
+        else setEvmAddress(null);
+    }, []);
+
+    const onChainChange = useCallback(() => {
+        window.location.reload();
+    }, []);
+
+    useEffect(() => {
+        const eth = (window as any).ethereum;
+        if (eth && eth.on) {
+            eth.on("accountsChanged", onAccountChange);
+            eth.on("chainChanged", onChainChange);
+            return () => {
+                eth.removeListener("accountsChanged", onAccountChange);
+                eth.removeListener("chainChanged", onChainChange);
+            };
+        }
+    }, [onAccountChange, onChainChange]);
 
     return (
         <WalletContext.Provider value={{
