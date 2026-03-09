@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import {
     makeContractCall, broadcastTransaction,
     uintCV, standardPrincipalCV, serializeCV,
+    deserializeCV, cvToJSON,
     PostConditionMode, AnchorMode
 } from "@stacks/transactions";
 import { STACKS_TESTNET } from "@stacks/network";
@@ -184,12 +185,53 @@ async function handleCollateralLocked(event: StacksEvent): Promise<void> {
         console.log(`✓ Attestation successful! Receipt: ${receipt.hash}`);
         await markActiveOnStacks(event.nonce);
     } catch (err: any) {
-        console.error(`✗ Attestation failed: ${err.reason || err.message}`);
+        if (err.message?.includes("already known") || err.data?.message?.includes("already known")) {
+            console.log(`Nonce ${event.nonce} is already in mempool. Mark persistent retry later.`);
+            // Optionally call markActiveOnStacks now, but wait for inclusion is safer
+        } else if (err.message?.includes("revert") || err.data?.message?.includes("revert")) {
+            console.error(`✗ Attestation reverted for nonce ${event.nonce}. Checking if already active...`);
+            const tid = await usc.nonceToTokenId(event.nonce);
+            if (tid !== 0n) {
+                console.log(`Actually, tokenId ${tid} exists for nonce ${event.nonce}. Closing loop.`);
+                await markActiveOnStacks(event.nonce);
+            }
+        } else {
+            console.error(`✗ Attestation failed: ${err.reason || err.message}`);
+        }
     }
 }
 
 async function markActiveOnStacks(nonce: number): Promise<void> {
     try {
+        // Find owner for this nonce to check current state
+        let owner = "";
+        const body = JSON.stringify({ sender: CONFIG.VAULT_ADDRESS, arguments: [cvToHex(uintCV(nonce))] });
+        const res = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-owner-by-nonce`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body
+        });
+        const data: any = await res.json();
+        if (data.okay && data.result) {
+            const cv = deserializeCV(Buffer.from(data.result.slice(2), "hex"));
+            const json: any = cvToJSON(cv);
+            owner = json.value?.value?.owner?.value || "";
+        }
+
+        if (owner) {
+            const vbody = JSON.stringify({ sender: owner, arguments: ["0x" + Buffer.from(serializeCV(standardPrincipalCV(owner))).toString("hex")] });
+            const vres = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-vault`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: vbody
+            });
+            const vdata: any = await vres.json();
+            if (vdata.okay && vdata.result && vdata.result !== "0x09") {
+                const vcv = deserializeCV(Buffer.from(vdata.result.slice(2), "hex"));
+                const vjson: any = cvToJSON(vcv);
+                if (vjson.value["credit-active"].value) {
+                    console.log(`Vault for nonce ${nonce} already marked active on Stacks. Skipping broadcast.`);
+                    return;
+                }
+            }
+        }
+
         const tx = await makeContractCall({
             contractAddress: CONFIG.VAULT_ADDRESS,
             contractName: CONFIG.VAULT_NAME,
@@ -203,7 +245,12 @@ async function markActiveOnStacks(nonce: number): Promise<void> {
         if ("txid" in result) {
             console.log(`✓ mark-credit-active broadcast: ${result.txid}`);
         } else {
-            console.error(`✗ mark-credit-active error: ${JSON.stringify(result)}`);
+            const msg = JSON.stringify(result);
+            if (msg.includes("already known")) {
+                console.log(`✓ mark-credit-active already in mempool.`);
+            } else {
+                console.error(`✗ mark-credit-active error: ${msg}`);
+            }
         }
     } catch (err: any) {
         console.error(`✗ mark-credit-active failed: ${err.message}`);
@@ -284,13 +331,26 @@ export async function releaseStacksCollateral(nonce: number): Promise<void> {
 
         // Better: HIRO API often returns 'repr' if you use the extended API or look at the right field.
         // Actually, let's just use the 'stacks-transactions' deserialize.
-        const { deserializeCV, cvToJSON } = require("@stacks/transactions");
         const cv = deserializeCV(Buffer.from(hex.slice(2), "hex"));
-        const json = cvToJSON(cv);
-        owner = json.value?.value?.owner?.value || "";
+        const json: any = cvToJSON(cv);
+
+        // cvToJSON structure: { type: 'optional', value: { type: 'tuple', value: { owner: { type: 'principal', value: '...' } } } }
+        let rawVal = json.value;
+        if (json.type === "optional" || json.type === 10) rawVal = json.value;
+
+        if (rawVal && rawVal.value && rawVal.value.owner) {
+            owner = rawVal.value.owner.value || rawVal.value.owner;
+        } else if (rawVal && rawVal.owner) {
+            owner = rawVal.owner.value || rawVal.owner;
+        }
+
+        if (typeof owner !== 'string' || !owner.startsWith('ST')) {
+            console.error(`Parsed owner invalid for nonce ${nonce}. raw: ${JSON.stringify(json)}`);
+            owner = "";
+        }
 
         if (!owner) {
-            console.error(`No owner found for nonce ${nonce}. CV: ${JSON.stringify(json)}`);
+            console.error(`No owner found for nonce ${nonce}. CV JSON: ${JSON.stringify(json)}`);
             return;
         }
     } catch (e: any) {

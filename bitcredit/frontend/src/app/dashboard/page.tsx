@@ -87,51 +87,54 @@ export default function Dashboard() {
     }, [evmAddress]);
 
     const checkCreditLine = useCallback(async () => {
-        if (!evmAddress) {
-            setPhase("idle");
-            setIsInitialLoading(false);
+        if (!evmAddress || !stacksAddress) {
+            if (isInitialLoading) { setPhase("idle"); setIsInitialLoading(false); }
             return;
         }
+
         try {
+            // 1. Check EVM side
             const res = await fetch(`${RELAYER}/api/credit-line?evmAddress=${evmAddress}`);
             const data = await res.json() as { active: boolean, [key: string]: any };
 
             if (data.active) {
                 setCreditLine(data as unknown as CreditLineData);
                 setPhase("active");
-                if (data.tokenId) {
-                    await loadPoolData(data.tokenId);
-                }
-            } else {
-                // If not active on EVM, check if we have a locked vault on Stacks
-                if (stacksAddress) {
-                    try {
-                        // Use the Relayer to check Stacks vault status to avoid complex CV logic in frontend
-                        // Use the Relayer to check Stacks vault status to avoid complex CV logic in frontend
-                        const vaultRes = await fetch(`${RELAYER}/api/vault-status?stacksAddress=${stacksAddress}`);
-                        const vaultData = await vaultRes.json();
+                if (data.tokenId) await loadPoolData(data.tokenId);
+                return;
+            }
 
-                        if (vaultData.locked && !vaultData.released) {
-                            setPhase("attesting");
-                        } else if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
-                            setPhase("idle");
-                            setCreditLine(null);
-                        }
-                    } catch {
-                        if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
-                            setPhase("idle");
-                        }
-                    }
-                } else if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
+            // 2. Not active on EVM, check Stacks vault status via Relayer
+            let vaultData: any = { locked: false };
+            try {
+                const vaultRes = await fetch(`${RELAYER}/api/vault-status?stacksAddress=${stacksAddress}`);
+                if (vaultRes.ok) {
+                    vaultData = await vaultRes.json();
+                } else {
+                    console.warn("Vault status endpoint failure, skipping phase reset");
+                    return; // Don't reset to idle if API is flaky
+                }
+            } catch (e) {
+                console.warn("Vault status fetch failed, skipping phase reset", e);
+                return; // Don't reset to idle if API is flaky
+            }
+
+            if (vaultData.locked && !vaultData.released) {
+                // If the vault is locked but not active on EVM yet, we are attesting
+                setPhase("attesting");
+            } else {
+                // No active vault OR it was released
+                if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
                     setPhase("idle");
+                    setCreditLine(null);
                 }
             }
         } catch (e) {
-            console.error("Credit line check failed", e);
+            console.error("Sync error:", e);
         } finally {
             setIsInitialLoading(false);
         }
-    }, [evmAddress, stacksAddress, loadPoolData, phase]);
+    }, [evmAddress, stacksAddress, loadPoolData, phase, isInitialLoading]);
 
     const fetchSbtcBalance = useCallback(async () => {
         if (!stacksAddress) return;

@@ -40,7 +40,15 @@ app.get("/api/vault-status", async (req, res) => {
         const response = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-vault`, {
             method: "POST", headers: { "Content-Type": "application/json" }, body
         });
-        const data: any = await response.json();
+
+        let data: any;
+        const text = await response.text();
+        try {
+            data = JSON.parse(text);
+        } catch {
+            return res.status(502).json({ error: "Upstream Stacks API error", details: text.slice(0, 100) });
+        }
+
         if (data.okay && data.result && data.result !== "0x09") {
             const cv = deserializeCV(Buffer.from(data.result.slice(2), "hex"));
             const json: any = cvToJSON(cv);
