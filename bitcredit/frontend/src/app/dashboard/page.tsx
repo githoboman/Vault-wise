@@ -54,7 +54,7 @@ const CreditcoinLogo = () => (
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Dashboard() {
-    const { stacksAddress, evmAddress, connectStacks, connectEVM, disconnect, isFullyConnected } = useWallet();
+    const { stacksAddress, evmAddress, connectStacks, connectEVM, disconnect, isFullyConnected, isInitializing } = useWallet();
     const [phase, setPhase] = useState<Phase>("idle");
     const [amountBTC, setAmountBTC] = useState("0.001");
     const [txId, setTxId] = useState("");
@@ -87,6 +87,7 @@ export default function Dashboard() {
     }, [evmAddress]);
 
     const checkCreditLine = useCallback(async () => {
+        if (isInitializing) return;
         if (!evmAddress || !stacksAddress) {
             if (isInitialLoading) { setPhase("idle"); setIsInitialLoading(false); }
             return;
@@ -134,7 +135,7 @@ export default function Dashboard() {
         } finally {
             setIsInitialLoading(false);
         }
-    }, [evmAddress, stacksAddress, loadPoolData, phase, isInitialLoading]);
+    }, [evmAddress, stacksAddress, loadPoolData, phase, isInitialLoading, isInitializing]);
 
     const fetchSbtcBalance = useCallback(async () => {
         if (!stacksAddress) return;
@@ -475,13 +476,13 @@ export default function Dashboard() {
 
                     {/* Left/Main Column: Actions */}
                     <div className="lg:col-span-4 space-y-8">
-                        {isInitialLoading && isFullyConnected ? (
+                        {isInitializing || (isInitialLoading && isFullyConnected) ? (
                             <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-16 text-center shadow-lg animate-pulse">
                                 <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full mx-auto mb-6 flex items-center justify-center">
                                     <div className="w-8 h-8 rounded-full border-4 border-black/10 dark:border-white/10 border-t-black dark:border-t-white animate-spin"></div>
                                 </div>
                                 <h3 className="text-2xl font-bold dark:text-white">Synchronizing System</h3>
-                                <p className="text-gray-400 mt-2">Connecting to decentralized credit graph...</p>
+                                <p className="text-gray-400 mt-2">{isInitializing ? "Restoring session..." : "Connecting to decentralized credit graph..."}</p>
                             </div>
                         ) : !isFullyConnected ? (
                             <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-16 text-center shadow-lg flex flex-col items-center justify-center gap-8">

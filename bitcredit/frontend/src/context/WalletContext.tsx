@@ -11,6 +11,7 @@ interface WalletContextType {
     connectStacks: () => void; connectEVM: () => Promise<void>;
     disconnect: () => void;
     isFullyConnected: boolean;
+    isInitializing: boolean;
 }
 
 const WalletContext = createContext<WalletContextType>({} as WalletContextType);
@@ -18,6 +19,7 @@ const WalletContext = createContext<WalletContextType>({} as WalletContextType);
 export function WalletProvider({ children }: { children: ReactNode }) {
     const [stacksAddress, setStacksAddress] = useState<string | null>(null);
     const [evmAddress, setEvmAddress] = useState<string | null>(null);
+    const [isInitializing, setIsInitializing] = useState(true);
 
     const connectStacks = useCallback(() => {
         authenticate({
@@ -80,11 +82,36 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             };
         }
     }, [onAccountChange, onChainChange]);
+    useEffect(() => {
+        const restoreSession = async () => {
+            // 1. Stacks restore
+            if (userSession.isUserSignedIn()) {
+                const data = userSession.loadUserData();
+                setStacksAddress(data.profile.stxAddress.testnet || data.profile.stxAddress.mainnet);
+            }
+
+            // 2. EVM restore (silent reconnect)
+            if (typeof window !== "undefined" && (window as any).ethereum) {
+                try {
+                    const provider = new ethers.BrowserProvider((window as any).ethereum);
+                    const accounts = await provider.send("eth_accounts", []);
+                    if (accounts.length > 0) {
+                        setEvmAddress(accounts[0]);
+                    }
+                } catch (e) {
+                    console.error("EVM restore failed", e);
+                }
+            }
+            setIsInitializing(false);
+        };
+        restoreSession();
+    }, []);
 
     return (
         <WalletContext.Provider value={{
             stacksAddress, evmAddress, connectStacks, connectEVM, disconnect,
             isFullyConnected: !!stacksAddress && !!evmAddress,
+            isInitializing
         }}>
             {children}
         </WalletContext.Provider>
