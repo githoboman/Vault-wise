@@ -28,15 +28,15 @@ export default function LandingPage() {
             <section className="max-w-6xl mx-auto px-6 pt-32 pb-20 text-center relative">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/50 dark:from-orange-500/10 via-white dark:via-black to-white dark:to-black transition-colors duration-500"></div>
 
-                <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-tight">
-                    BTC Liquidity, <br />
+                <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-8 leading-tight">
+                    Borrow USD, <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
-                        Zero Centralization.
+                        Keep Your Bitcoin.
                     </span>
                 </h1>
 
                 <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-                    The first truly trust-minimized protocol bridging Stacks Bitcoin collateral directly into Creditcoin lending markets. Build your on-chain reputation today.
+                    Unlock immediate liquidity without selling your BTC. BitCredit bridges Stacks Bitcoin collateral into Creditcoin lending markets—allowing you to mint Credit Power securely and build on-chain reputation.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -51,20 +51,20 @@ export default function LandingPage() {
 
             {/* Features/Stats Banner */}
             <section className="border-y border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02]">
-                <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-gray-200 dark:divide-white/10">
-                    <div className="text-center px-4">
+                <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-white/10">
+                    <div className="text-center px-4 py-4 sm:py-0">
                         <h4 className="text-4xl font-black text-gray-900 dark:text-white mb-2">70%</h4>
                         <p className="text-sm font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Max LTV Ratio</p>
                     </div>
-                    <div className="text-center px-4">
+                    <div className="text-center px-4 py-4 sm:py-0">
                         <h4 className="text-4xl font-black text-gray-900 dark:text-white mb-2">2</h4>
                         <p className="text-sm font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Chains Bridged</p>
                     </div>
-                    <div className="text-center px-4">
+                    <div className="text-center px-4 py-4 sm:py-0">
                         <h4 className="text-4xl font-black text-gray-900 dark:text-white mb-2">~3s</h4>
                         <p className="text-sm font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Attestation Time</p>
                     </div>
-                    <div className="text-center px-4">
+                    <div className="text-center px-4 py-4 sm:py-0">
                         <h4 className="text-4xl font-black text-gray-900 dark:text-white mb-2">300+</h4>
                         <p className="text-sm font-bold tracking-widest uppercase text-gray-500 dark:text-gray-400">Credit Score Range</p>
                     </div>
@@ -85,9 +85,9 @@ export default function LandingPage() {
                         <div className="w-14 h-14 bg-purple-50 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center mb-6 text-[#5546FF] dark:text-purple-400">
                             <Lock className="w-7 h-7" />
                         </div>
-                        <h4 className="text-xl font-bold mb-3 dark:text-white">1. Lock Stacks Collateral</h4>
+                        <h4 className="text-xl font-bold mb-3 dark:text-white">1. Deposit & Lock</h4>
                         <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                            Deposit your sBTC into our decentralized Vault smart contract on the Stacks network. Your funds remain locked on Layer 2 securely for the duration of the loan.
+                            Securely lock your sBTC in a non-custodial Stacks vault. You keep your Bitcoin on-chain, but it's now 'reserved' to back your new line of credit.
                         </p>
                     </div>
 
@@ -96,9 +96,9 @@ export default function LandingPage() {
                         <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-center mb-6 text-black dark:text-white">
                             <Repeat className="w-7 h-7" />
                         </div>
-                        <h4 className="text-xl font-bold mb-3 dark:text-white">2. Relayer Attestation</h4>
+                        <h4 className="text-xl font-bold mb-3 dark:text-white">2. Bridge to Creditcoin</h4>
                         <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                            Our cross-chain Relayer node instantly detects your Stacks block confirmation and securely routes a cryptographic attestation proof to the EVM network.
+                            Our protocol automatically verifies your deposit on Stacks and 'unlocks' its equivalent value on the Creditcoin network as lending power.
                         </p>
                     </div>
 

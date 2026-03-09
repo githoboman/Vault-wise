@@ -353,19 +353,20 @@ export default function Dashboard() {
     return (
         <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white font-sans selection:bg-orange-200 dark:selection:bg-orange-900 transition-colors duration-300">
             {/* Minimalist Header */}
-            <header className="border-b border-gray-100 dark:border-white/10 px-8 py-5 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-black/60 backdrop-blur-xl z-50">
+            <header className="border-b border-gray-100 dark:border-white/10 px-4 md:px-8 py-5 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-black/60 backdrop-blur-xl z-50 transition-all">
                 <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <div className="flex items-center justify-center w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-md shadow-sm">
                         <span className="font-bold text-lg leading-none">B</span>
                     </div>
-                    <span className="text-xl font-bold tracking-tight">BitCredit</span>
+                    <span className="text-xl font-bold tracking-tight hidden sm:inline">BitCredit</span>
                 </Link>
-                <div className="flex flex-row items-center gap-6">
+                <div className="flex flex-row items-center gap-3 md:gap-6">
                     <ThemeToggle />
                     {isFullyConnected && (
                         <button onClick={disconnect}
-                            className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-full transition-all border border-red-100 dark:border-red-900/30">
-                            Disconnect
+                            className="text-[10px] md:text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 md:px-3 py-1.5 rounded-full transition-all border border-red-100 dark:border-red-900/30">
+                            <span className="hidden md:inline">Disconnect</span>
+                            <span className="md:hidden">DC</span>
                         </button>
                     )}
                     <div className="flex items-center gap-2">
@@ -374,42 +375,41 @@ export default function Dashboard() {
                             className="p-2 text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-all">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                         </button>
-                        <span className="text-[10px] uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-sm font-semibold ml-2">
-                            Testnet
-                        </span>
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex gap-2 md:gap-4">
                         <button onClick={connectStacks}
-                            className={`flex items-center gap-2 text-sm px-5 py-2.5 rounded-full transition-all duration-300 ${stacksAddress ? "bg-gray-50 dark:bg-white/5 text-black dark:text-white border border-gray-200 dark:border-white/10 shadow-sm" : "bg-white dark:bg-[#111] text-black dark:text-white border border-gray-200 dark:border-white/20 hover:border-black dark:hover:border-white/50 shadow-sm hover:shadow-md"}`}>
+                            className={`flex items-center gap-2 text-xs md:text-sm px-3 md:px-5 py-2.5 rounded-full transition-all duration-300 ${stacksAddress ? "bg-gray-50 dark:bg-white/5 text-black dark:text-white border border-gray-200 dark:border-white/10 shadow-sm" : "bg-white dark:bg-[#111] text-black dark:text-white border border-gray-200 dark:border-white/20 hover:border-black dark:hover:border-white/50 shadow-sm hover:shadow-md"}`}>
                             <span className={stacksAddress ? "text-[#5546FF]" : "text-gray-400 dark:text-gray-500"}><StacksLogo /></span>
-                            {stacksAddress ? `${stacksAddress.slice(0, 6)}...${stacksAddress.slice(-4)}` : "Connect Stacks"}
+                            <span className="hidden lg:inline">{stacksAddress ? `${stacksAddress.slice(0, 6)}...${stacksAddress.slice(-4)}` : "Connect Stacks"}</span>
+                            {!stacksAddress && <span className="lg:hidden">Connect</span>}
                         </button>
                         <button onClick={connectEVM}
-                            className={`flex items-center gap-2 text-sm px-5 py-2.5 rounded-full transition-all duration-300 ${evmAddress ? "bg-gray-50 dark:bg-white/5 text-black dark:text-white border border-gray-200 dark:border-white/10 shadow-sm" : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200 shadow-sm hover:shadow-md"}`}>
+                            className={`flex items-center gap-2 text-xs md:text-sm px-3 md:px-5 py-2.5 rounded-full transition-all duration-300 ${evmAddress ? "bg-gray-50 dark:bg-white/5 text-black dark:text-white border border-gray-200 dark:border-white/10 shadow-sm" : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-900 dark:hover:bg-gray-200 shadow-sm hover:shadow-md"}`}>
                             <span className={evmAddress ? "text-[#00E599]" : "text-orange-400 dark:text-orange-500"}><CreditcoinLogo /></span>
-                            {evmAddress ? `${evmAddress.slice(0, 6)}...${evmAddress.slice(-4)}` : "Connect EVM"}
+                            <span className="hidden lg:inline">{evmAddress ? `${evmAddress.slice(0, 6)}...${evmAddress.slice(-4)}` : "Connect EVM"}</span>
+                            {!evmAddress && <span className="lg:hidden">Connect</span>}
                         </button>
                     </div>
                 </div>
             </header>
 
             {/* Main Content Dashboard */}
-            <div className="max-w-6xl mx-auto px-6 py-12 space-y-8">
+            <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12 space-y-8">
 
                 {/* 1. Header Section with Transitions */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         {phase === "active" ? (
                             <>
-                                <h1 className="text-4xl font-extrabold tracking-tight dark:text-white">Active Credit Line</h1>
-                                <p className="text-gray-500 dark:text-gray-400 text-lg max-w-xl">
+                                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight dark:text-white">Active Credit Line</h1>
+                                <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg max-w-xl leading-relaxed">
                                     Manage your liquidity across Stacks and Creditcoin. Your Bitcoin collateral is secure.
                                 </p>
                             </>
                         ) : (
                             <>
-                                <h1 className="text-4xl font-extrabold tracking-tight">Vault Terminal</h1>
-                                <p className="text-gray-500 text-lg">Cross-chain liquidity powered by Bitcoin collateral.</p>
+                                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">Vault Terminal</h1>
+                                <p className="text-gray-500 text-base md:text-lg">Cross-chain liquidity powered by Bitcoin collateral.</p>
                             </>
                         )}
                     </div>
