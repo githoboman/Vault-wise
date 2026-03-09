@@ -15,5 +15,5 @@ export const CONFIG = {
     USC_ADDRESS: process.env.USC_ADDRESS!,
     EVM_PRIV: process.env.EVM_PRIV!,
     PORT: process.env.PORT || 3001,
-    POLL_INTERVAL_MS: 30_000,
+    POLL_INTERVAL_MS: 10_000,
 };

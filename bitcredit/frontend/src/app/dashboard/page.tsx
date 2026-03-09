@@ -167,7 +167,11 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, [fetchSbtcBalance]);
 
-    useEffect(() => { checkCreditLine(); }, [checkCreditLine]);
+    useEffect(() => {
+        checkCreditLine();
+        const interval = setInterval(checkCreditLine, 10_000);
+        return () => clearInterval(interval);
+    }, [checkCreditLine]);
 
     function pollAttestation(id: string) {
         const interval = setInterval(async () => {

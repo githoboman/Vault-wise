@@ -122,8 +122,12 @@ export async function pollStacksEvents(): Promise<void> {
             }
 
             console.log(`\nCollateralLocked Event: tx=${txId} owner=${parsed.owner} nonce=${parsed.nonce}`);
-            await handleCollateralLocked(parsed);
-            addProcessedTx(txId);
+            const success = await handleCollateralLocked(parsed);
+            if (success) {
+                addProcessedTx(txId);
+            } else {
+                console.warn(`Event ${txId} for nonce ${parsed.nonce} will be retried in next poll.`);
+            }
         }
     } catch (err: any) {
         console.error("Poll error:", err.message);
@@ -132,11 +136,11 @@ export async function pollStacksEvents(): Promise<void> {
 
 // ─── Cross-chain attestation ──────────────────────────────────────────────────
 
-async function handleCollateralLocked(event: StacksEvent): Promise<void> {
+async function handleCollateralLocked(event: StacksEvent): Promise<boolean> {
     const evmAddress = lookup(event.owner);
     if (!evmAddress) {
         console.warn(`No EVM address mapped for ${event.owner}. User must register first.`);
-        return;
+        return false; // Retry later
     }
 
     // Pre-flight 1: check authorization
@@ -144,11 +148,11 @@ async function handleCollateralLocked(event: StacksEvent): Promise<void> {
         const isAttestor = await usc.attestors(evmSigner.address);
         if (!isAttestor) {
             console.error(`Relayer ${evmSigner.address} is NOT an authorized attestor on ${CONFIG.USC_ADDRESS}`);
-            return;
+            return false;
         }
     } catch (e: any) {
         console.error("Attestor check failed:", e.message);
-        return;
+        return false;
     }
 
     // Pre-flight 2: check if nonce already processed on EVM
@@ -157,7 +161,7 @@ async function handleCollateralLocked(event: StacksEvent): Promise<void> {
         if (tokenId !== 0n) {
             console.log(`Nonce ${event.nonce} already processed (tokenId=${tokenId}). Marking active on Stacks.`);
             await markActiveOnStacks(event.nonce);
-            return;
+            return true; // Already done
         }
     } catch (e: any) {
         console.error("Nonce check failed:", e.message);
@@ -169,7 +173,7 @@ async function handleCollateralLocked(event: StacksEvent): Promise<void> {
         if (currentLine !== 0n) {
             console.log(`Borrower ${evmAddress} already has an active line ${currentLine}. Marking active on Stacks.`);
             await markActiveOnStacks(event.nonce);
-            return;
+            return true; // Already has a line, cannot issue another but we can mark this one's vault active
         }
     } catch (e: any) {
         console.error("Active line check failed:", e.message);
@@ -184,19 +188,23 @@ async function handleCollateralLocked(event: StacksEvent): Promise<void> {
         const receipt = await tx.wait();
         console.log(`✓ Attestation successful! Receipt: ${receipt.hash}`);
         await markActiveOnStacks(event.nonce);
+        return true;
     } catch (err: any) {
         if (err.message?.includes("already known") || err.data?.message?.includes("already known")) {
-            console.log(`Nonce ${event.nonce} is already in mempool. Mark persistent retry later.`);
-            // Optionally call markActiveOnStacks now, but wait for inclusion is safer
+            console.log(`Nonce ${event.nonce} is already in mempool. Waiting for confirmation.`);
+            return false; // Keep it in poll until confirmed
         } else if (err.message?.includes("revert") || err.data?.message?.includes("revert")) {
             console.error(`✗ Attestation reverted for nonce ${event.nonce}. Checking if already active...`);
             const tid = await usc.nonceToTokenId(event.nonce);
             if (tid !== 0n) {
                 console.log(`Actually, tokenId ${tid} exists for nonce ${event.nonce}. Closing loop.`);
                 await markActiveOnStacks(event.nonce);
+                return true;
             }
+            return false;
         } else {
             console.error(`✗ Attestation failed: ${err.reason || err.message}`);
+            return false;
         }
     }
 }
