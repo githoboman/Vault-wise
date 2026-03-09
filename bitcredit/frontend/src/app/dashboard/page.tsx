@@ -13,6 +13,7 @@ const VAULT_NAME = process.env.NEXT_PUBLIC_VAULT_NAME!;
 const POOL_ADDR = process.env.NEXT_PUBLIC_POOL_ADDRESS!;
 const USDC_ADDR = process.env.NEXT_PUBLIC_MOCK_USDC_ADDRESS!;
 const BTC_PRICE = 97_000;
+const STACKS_API = "https://api.testnet.hiro.so";
 
 type Phase = "idle" | "locking" | "attesting" | "active" | "error" | "closing";
 
@@ -68,6 +69,7 @@ export default function Dashboard() {
     const [sbtcBalance, setSbtcBalance] = useState<bigint | null>(null);
     const [isMinting, setIsMinting] = useState(false);
     const [txLoading, setTxLoading] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     const loadPoolData = useCallback(async (tokenId: string) => {
         if (!evmAddress || !(window as any).ethereum) return;
@@ -85,19 +87,51 @@ export default function Dashboard() {
     }, [evmAddress]);
 
     const checkCreditLine = useCallback(async () => {
-        if (!evmAddress) return;
+        if (!evmAddress) {
+            setPhase("idle");
+            setIsInitialLoading(false);
+            return;
+        }
         try {
             const res = await fetch(`${RELAYER}/api/credit-line?evmAddress=${evmAddress}`);
             const data = await res.json() as { active: boolean, [key: string]: any };
+
             if (data.active) {
                 setCreditLine(data as unknown as CreditLineData);
                 setPhase("active");
                 if (data.tokenId) {
                     await loadPoolData(data.tokenId);
                 }
+            } else {
+                // If not active on EVM, check if we have a locked vault on Stacks
+                if (stacksAddress) {
+                    try {
+                        // Use the Relayer to check Stacks vault status to avoid complex CV logic in frontend
+                        // Use the Relayer to check Stacks vault status to avoid complex CV logic in frontend
+                        const vaultRes = await fetch(`${RELAYER}/api/vault-status?stacksAddress=${stacksAddress}`);
+                        const vaultData = await vaultRes.json();
+
+                        if (vaultData.locked && !vaultData.released) {
+                            setPhase("attesting");
+                        } else if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
+                            setPhase("idle");
+                            setCreditLine(null);
+                        }
+                    } catch {
+                        if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
+                            setPhase("idle");
+                        }
+                    }
+                } else if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
+                    setPhase("idle");
+                }
             }
-        } catch { }
-    }, [evmAddress, loadPoolData]);
+        } catch (e) {
+            console.error("Credit line check failed", e);
+        } finally {
+            setIsInitialLoading(false);
+        }
+    }, [evmAddress, stacksAddress, loadPoolData, phase]);
 
     const fetchSbtcBalance = useCallback(async () => {
         if (!stacksAddress) return;
@@ -137,7 +171,11 @@ export default function Dashboard() {
             try {
                 const res = await fetch(`${RELAYER}/api/attestation-status?txId=${id}`);
                 const data = await res.json() as { status: string, [key: string]: any };
-                if (data.status === "active") { clearInterval(interval); await checkCreditLine(); }
+                if (data.status === "active") {
+                    clearInterval(interval);
+                    localStorage.removeItem("bitcredit_txid");
+                    await checkCreditLine();
+                }
             } catch { }
         }, 10_000);
         setTimeout(() => {
@@ -145,6 +183,15 @@ export default function Dashboard() {
             if (phase === "attesting") { setErrorMsg("Attestation timed out."); setPhase("error"); }
         }, 30 * 60_000);
     }
+
+    useEffect(() => {
+        const savedTxId = localStorage.getItem("bitcredit_txid");
+        if (savedTxId && isFullyConnected) {
+            setTxId(savedTxId);
+            setPhase("attesting");
+            pollAttestation(savedTxId);
+        }
+    }, [isFullyConnected]);
 
     async function waitForStacksTx(txId: string) {
         setIsMinting(true);
@@ -192,7 +239,12 @@ export default function Dashboard() {
             functionName: "lock-collateral", functionArgs: [uintCV(sats)],
             network: STACKS_TESTNET, anchorMode: AnchorMode.Any,
             postConditionMode: PostConditionMode.Allow,
-            onFinish: (data) => { setTxId(data.txId); setPhase("attesting"); pollAttestation(data.txId); },
+            onFinish: (data) => {
+                setTxId(data.txId);
+                localStorage.setItem("bitcredit_txid", data.txId);
+                setPhase("attesting");
+                pollAttestation(data.txId);
+            },
             onCancel: () => setPhase("idle"),
         });
     }
@@ -355,7 +407,12 @@ export default function Dashboard() {
 
                     <div className="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
                         <div className="p-8 space-y-8">
-                            {!isFullyConnected ? (
+                            {isInitialLoading && isFullyConnected ? (
+                                <div className="text-center py-16 animate-pulse">
+                                    <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto mb-4"></div>
+                                    <p className="text-gray-400 font-medium">Synchronizing with blockchain...</p>
+                                </div>
+                            ) : !isFullyConnected ? (
                                 <div className="text-center py-12 space-y-6">
                                     <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>

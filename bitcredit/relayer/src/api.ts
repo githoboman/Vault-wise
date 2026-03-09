@@ -3,6 +3,7 @@ import cors from "cors";
 import { ethers } from "ethers";
 import { register, getAll } from "./addressRegistry";
 import { CONFIG } from "./config";
+import { serializeCV, standardPrincipalCV, deserializeCV, cvToJSON } from "@stacks/transactions";
 
 const app = express();
 const provider = new ethers.JsonRpcProvider(CONFIG.CREDITCOIN_RPC);
@@ -24,6 +25,36 @@ app.post("/api/register", (req, res) => {
         return res.status(400).json({ error: "Missing stacksAddress or evmAddress" });
     register(stacksAddress, evmAddress);
     res.json({ success: true });
+});
+
+app.get("/api/vault-status", async (req, res) => {
+    const { stacksAddress } = req.query as { stacksAddress: string };
+    if (!stacksAddress) return res.status(400).json({ error: "Missing stacksAddress" });
+    try {
+        const body = JSON.stringify({
+            sender: stacksAddress,
+            arguments: [
+                "0x" + Buffer.from(serializeCV(standardPrincipalCV(stacksAddress))).toString("hex")
+            ]
+        });
+        const response = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-vault`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body
+        });
+        const data: any = await response.json();
+        if (data.okay && data.result && data.result !== "0x09") {
+            const cv = deserializeCV(Buffer.from(data.result.slice(2), "hex"));
+            const json: any = cvToJSON(cv);
+            const val = json.value;
+            res.json({
+                locked: true,
+                amount: val.amount.value,
+                released: val.released.value,
+                creditActive: val["credit-active"].value
+            });
+        } else {
+            res.json({ locked: false });
+        }
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/api/credit-line", async (req, res) => {

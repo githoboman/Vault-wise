@@ -9,7 +9,7 @@ async function main() {
     console.log(`USC:   ${CONFIG.USC_ADDRESS}`);
     startApi(CONFIG.PORT);
     listenForCreditLineClosed();
-    cron.schedule("*/30 * * * * *", pollStacksEvents);
+    cron.schedule("*/10 * * * * *", pollStacksEvents);
     await pollStacksEvents();
     console.log("Relayer live.");
 }
