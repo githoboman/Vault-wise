@@ -31,28 +31,43 @@ app.get("/api/vault-status", async (req, res) => {
     const { stacksAddress } = req.query as { stacksAddress: string };
     if (!stacksAddress) return res.status(400).json({ error: "Missing stacksAddress" });
     try {
+        const cv = standardPrincipalCV(stacksAddress);
+        const serialized = serializeCV(cv);
+        const hex = typeof serialized === "string" ? serialized : Buffer.from(serialized).toString("hex");
+        const arg = hex.startsWith("0x") ? hex : "0x" + hex;
+
         const body = JSON.stringify({
             sender: stacksAddress,
-            arguments: [
-                "0x" + Buffer.from(serializeCV(standardPrincipalCV(stacksAddress))).toString("hex")
-            ]
+            arguments: [arg]
         });
+
         const response = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-vault`, {
             method: "POST", headers: { "Content-Type": "application/json" }, body
         });
 
-        let data: any;
         const text = await response.text();
+        let data: any;
         try {
             data = JSON.parse(text);
         } catch {
-            return res.status(502).json({ error: "Upstream Stacks API error", details: text.slice(0, 100) });
+            return res.status(502).json({ error: "Upstream Stacks API error (non-JSON)", details: text.slice(0, 100) });
+        }
+
+        if (response.status !== 200) {
+            return res.status(response.status).json({ error: "Upstream Stacks API error", data });
         }
 
         if (data.okay && data.result && data.result !== "0x09") {
             const cv = deserializeCV(Buffer.from(data.result.slice(2), "hex"));
-            const json: any = cvToJSON(cv);
-            const val = json.value;
+            let cvJson: any = cvToJSON(cv);
+
+            // Handle (optional (tuple ...))
+            if (cvJson.type.startsWith("(optional")) {
+                if (!cvJson.value) return res.json({ locked: false });
+                cvJson = cvJson.value; // Enter into optional
+            }
+
+            const val = cvJson.value; // tuple inner value
             res.json({
                 locked: true,
                 amount: val.amount.value,
@@ -62,18 +77,28 @@ app.get("/api/vault-status", async (req, res) => {
         } else {
             res.json({ locked: false });
         }
-    } catch (err: any) { res.status(500).json({ error: err.message }); }
+    } catch (err: any) {
+        console.error("Relayer API Error:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.get("/api/credit-line", async (req, res) => {
     const { evmAddress } = req.query as { evmAddress: string };
-    console.log(`API: GET /api/credit-line?evmAddress=${evmAddress}`);
+    if (!evmAddress) return res.status(400).json({ error: "Missing evmAddress" });
     try {
-        const tokenId = await usc.activeCreditLine(evmAddress);
-        console.log(`API: tokenId for ${evmAddress} is ${tokenId}`);
-        if (tokenId === 0n) return res.json({ active: false });
-        const cl = await usc.getActiveCreditLine(evmAddress);
         const score = await usc.getCreditScore(evmAddress);
+        const tokenId = await usc.activeCreditLine(evmAddress);
+
+        if (tokenId === 0n) {
+            return res.json({
+                active: false,
+                creditScore: score.toString(),
+                totalRepaidCents: "0" // Base repaid for new sessions
+            });
+        }
+
+        const cl = await usc.getActiveCreditLine(evmAddress);
         res.json({
             active: true, tokenId: tokenId.toString(),
             creditPowerUSD: cl.creditPowerUSD.toString(),

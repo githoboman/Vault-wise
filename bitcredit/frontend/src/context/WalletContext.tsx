@@ -23,11 +23,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const connectStacks = useCallback(() => {
         authenticate({
-            appDetails: { name: "BitCredit", icon: "/favicon.ico" },
+            appDetails: {
+                name: "BitCredit",
+                icon: window.location.origin + "/favicon.ico"
+            },
             userSession,
             onFinish: () => {
                 const data = userSession.loadUserData();
-                setStacksAddress(data.profile.stxAddress.testnet);
+                setStacksAddress(data.profile.stxAddress.testnet || data.profile.stxAddress.mainnet);
             },
             onCancel: () => { },
         });
@@ -35,25 +38,44 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const connectEVM = useCallback(async () => {
         const eth = (window as any).ethereum;
-        if (!eth) { alert("MetaMask not found."); return; }
+
+        if (!eth) {
+            // Mobile deep linking fallback for MetaMask
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                const link = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+                window.location.href = link;
+                return;
+            }
+            alert("Ethereum-compatible wallet not detected. Please install MetaMask, Rabby, or use a Web3 browser.");
+            return;
+        }
+
         const p = new ethers.BrowserProvider(eth);
         try {
-            await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x18E91" }] });
-        } catch (err: any) {
-            if (err.code === 4902) {
-                await eth.request({
-                    method: "wallet_addEthereumChain",
-                    params: [{
-                        chainId: "0x18E91", chainName: "Creditcoin USC Testnet",
-                        rpcUrls: ["https://rpc.usc-testnet.creditcoin.network"],
-                        nativeCurrency: { name: "tCTC", symbol: "tCTC", decimals: 18 },
-                        blockExplorerUrls: ["https://explorer.usc-testnet.creditcoin.network/"],
-                    }]
-                });
+            // Requesting account first to avoid issues on some mobile browsers
+            const accounts = await p.send("eth_requestAccounts", []);
+            setEvmAddress(accounts[0]);
+
+            // Then handle chain switching
+            try {
+                await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x18E91" }] });
+            } catch (err: any) {
+                if (err.code === 4902) {
+                    await eth.request({
+                        method: "wallet_addEthereumChain",
+                        params: [{
+                            chainId: "0x18E91", chainName: "Creditcoin USC Testnet",
+                            rpcUrls: ["https://rpc.usc-testnet.creditcoin.network"],
+                            nativeCurrency: { name: "tCTC", symbol: "tCTC", decimals: 18 },
+                            blockExplorerUrls: ["https://explorer.usc-testnet.creditcoin.network/"],
+                        }]
+                    });
+                }
             }
+        } catch (e: any) {
+            console.error("EVM Connection error", e);
         }
-        const accounts = await p.send("eth_requestAccounts", []);
-        setEvmAddress(accounts[0]);
     }, []);
 
     const disconnect = useCallback(() => {

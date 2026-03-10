@@ -94,12 +94,14 @@ export default function Dashboard() {
         }
 
         try {
-            // 1. Check EVM side
+            // 1. Check EVM side (includes credit score if registered)
             const res = await fetch(`${RELAYER}/api/credit-line?evmAddress=${evmAddress}`);
             const data = await res.json() as { active: boolean, [key: string]: any };
 
+            // ALWAYS store the credit data (reputation) even if not active
+            setCreditLine(data as unknown as CreditLineData);
+
             if (data.active) {
-                setCreditLine(data as unknown as CreditLineData);
                 setPhase("active");
                 if (data.tokenId) await loadPoolData(data.tokenId);
                 return;
@@ -113,21 +115,18 @@ export default function Dashboard() {
                     vaultData = await vaultRes.json();
                 } else {
                     console.warn("Vault status endpoint failure, skipping phase reset");
-                    return; // Don't reset to idle if API is flaky
+                    return;
                 }
             } catch (e) {
                 console.warn("Vault status fetch failed, skipping phase reset", e);
-                return; // Don't reset to idle if API is flaky
+                return;
             }
 
             if (vaultData.locked && !vaultData.released) {
-                // If the vault is locked but not active on EVM yet, we are attesting
                 setPhase("attesting");
             } else {
-                // No active vault OR it was released
                 if (phase !== "locking" && phase !== "attesting" && phase !== "closing") {
                     setPhase("idle");
-                    setCreditLine(null);
                 }
             }
         } catch (e) {
@@ -342,8 +341,8 @@ export default function Dashboard() {
 
     // Testnet UI Gamification: The smart contract normally requires $100 repaid per 1 point. 
     // Since we are doing smaller $20 loans, we will manually boost the UI presentation (1 USD = 1 Point)
-    const baseScore = creditLine ? parseInt(creditLine.creditScore) : null;
-    const repaidCents = creditLine ? parseInt(creditLine.totalRepaidCents) : 0;
+    const baseScore = creditLine?.creditScore ? parseInt(creditLine.creditScore) : null;
+    const repaidCents = creditLine?.totalRepaidCents ? parseInt(creditLine.totalRepaidCents) : 0;
     const score = baseScore !== null ? Math.min(850, 300 + Math.floor(repaidCents / 100)) : null;
 
     // Minimalist score coloring

@@ -6,36 +6,38 @@ export default function LandingPage() {
     return (
         <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white font-sans selection:bg-orange-200 dark:selection:bg-orange-900 overflow-x-hidden transition-colors duration-300">
             {/* Minimalist Navigation */}
-            <nav className="border-b border-gray-100 dark:border-white/10 px-8 py-5 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-black/60 backdrop-blur-xl z-50">
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-md shadow-sm">
-                        <span className="font-bold text-lg leading-none">B</span>
+            <nav className="border-b border-gray-100 dark:border-white/10 px-4 md:px-8 py-4 md:py-5 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-black/60 backdrop-blur-xl z-50">
+                <div className="flex items-center gap-1.5 md:gap-2">
+                    <div className="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 bg-black dark:bg-white text-white dark:text-black rounded-md shadow-sm">
+                        <span className="font-bold text-base md:text-lg leading-none">B</span>
                     </div>
-                    <span className="text-xl font-bold tracking-tight">BitCredit</span>
-                    <span className="text-[10px] uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-sm font-semibold ml-2">
+                    <span className="text-lg md:text-xl font-bold tracking-tight">BitCredit</span>
+                    <span className="hidden xs:inline-block text-[10px] uppercase tracking-widest bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-sm font-semibold ml-1 md:ml-2">
                         Protocol
                     </span>
                 </div>
-                <div className="flex flex-row items-center gap-6">
+                <div className="flex flex-row items-center gap-3 md:gap-6">
                     <ThemeToggle />
-                    <Link href="/dashboard" className="flex items-center gap-2 text-sm font-bold bg-black dark:bg-white text-white dark:text-black px-6 py-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-md">
-                        Launch App <ArrowRight className="w-4 h-4" />
+                    <Link href="/dashboard" className="flex items-center gap-2 text-xs md:text-sm font-bold bg-black dark:bg-white text-white dark:text-black px-4 md:px-6 py-2 md:py-2.5 rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm hover:shadow-md">
+                        <span className="hidden sm:inline">Launch App</span>
+                        <span className="sm:hidden">Launch</span>
+                        <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </Link>
                 </div>
             </nav>
 
             {/* Hero Section */}
-            <section className="max-w-6xl mx-auto px-6 pt-32 pb-20 text-center relative">
+            <section className="max-w-6xl mx-auto px-6 pt-20 md:pt-32 pb-20 text-center relative">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-50/50 dark:from-orange-500/10 via-white dark:via-black to-white dark:to-black transition-colors duration-500"></div>
 
-                <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-8 leading-tight">
-                    Borrow USD, <br />
+                <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter mb-8 leading-[1.1] md:leading-tight">
+                    Borrow USD, <br className="hidden sm:block" />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
                         Keep Your Bitcoin.
                     </span>
                 </h1>
 
-                <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
+                <p className="text-lg md:text-2xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
                     Unlock immediate liquidity without selling your BTC. BitCredit bridges Stacks Bitcoin collateral into Creditcoin lending markets—allowing you to mint Credit Power securely and build on-chain reputation.
                 </p>
 
@@ -137,8 +139,8 @@ export default function LandingPage() {
                             </div>
                             <h2 className="text-sm font-black text-orange-500 tracking-widest uppercase">The CTC Synergy</h2>
                         </div>
-                        <h3 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8">
-                            Empowering the <br />
+                        <h3 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8">
+                            Empowering the <br className="hidden sm:block" />
                             <span className="text-orange-500">Creditcoin Ecosystem</span>
                         </h3>
                         <div className="space-y-6 text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
