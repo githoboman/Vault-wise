@@ -7,7 +7,7 @@ import { openContractCall } from "@stacks/connect";
 import { STACKS_TESTNET } from "@stacks/network";
 import { uintCV, standardPrincipalCV, AnchorMode, PostConditionMode } from "@stacks/transactions";
 
-const RELAYER = process.env.NEXT_PUBLIC_RELAYER_URL!;
+const RELAYER = (process.env.NEXT_PUBLIC_RELAYER_URL || "").replace(/\/$/, "");
 const VAULT_ADDR = process.env.NEXT_PUBLIC_VAULT_ADDRESS!;
 const VAULT_NAME = process.env.NEXT_PUBLIC_VAULT_NAME!;
 const POOL_ADDR = process.env.NEXT_PUBLIC_POOL_ADDRESS!;
