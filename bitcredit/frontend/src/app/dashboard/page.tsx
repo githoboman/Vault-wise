@@ -694,19 +694,37 @@ export default function Dashboard() {
 
                         {/* Collateral Detail */}
                         {phase === "active" && creditLine && (
-                            <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-8 shadow-sm">
-                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Security Layer</h3>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-[#5546FF]">
-                                        <StacksLogo />
+                            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                                <div className="bg-white dark:bg-[#111] rounded-[2.5rem] border border-gray-100 dark:border-white/10 p-8 shadow-sm">
+                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Security Layer</h3>
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-12 h-12 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-[#5546FF]">
+                                            <StacksLogo />
+                                        </div>
+                                        <div>
+                                            <p className="text-xl font-black dark:text-white leading-none">{(parseInt(creditLine.collateralSats) / 1e8).toFixed(4)} sBTC</p>
+                                            <p className="text-xs font-bold text-gray-500 mt-1">Locked in Stacks Ledger</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xl font-black dark:text-white leading-none">{(parseInt(creditLine.collateralSats) / 1e8).toFixed(4)} sBTC</p>
-                                        <p className="text-xs font-bold text-gray-500 mt-1">Locked in Stacks Ledger</p>
+                                    <div className="text-[10px] font-bold text-gray-400 bg-gray-50 dark:bg-white/5 p-4 rounded-xl leading-relaxed">
+                                        Collateral is non-custodial and cryptographically locked on Bitcoin L2 until debt is settled on Creditcoin.
                                     </div>
                                 </div>
-                                <div className="text-[10px] font-bold text-gray-400 bg-gray-50 dark:bg-white/5 p-4 rounded-xl leading-relaxed">
-                                    Collateral is non-custodial and cryptographically locked on Bitcoin L2 until debt is settled on Creditcoin.
+
+                                <div className="bg-black dark:bg-white dark:text-black text-white rounded-[2.5rem] p-8 shadow-xl">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <h3 className="text-xs font-black opacity-50 uppercase tracking-widest mb-1 text-inherit">Borrowing Power</h3>
+                                            <p className="text-2xl font-black text-inherit">Max Credit Line</p>
+                                        </div>
+                                        <div className="w-10 h-10 bg-white/10 dark:bg-black/10 rounded-xl flex items-center justify-center">
+                                            <CreditcoinLogo />
+                                        </div>
+                                    </div>
+                                    <p className="text-4xl font-black text-inherit">${parseInt(creditLine.creditPowerUSD).toLocaleString()}</p>
+                                    <p className="text-[10px] font-bold mt-4 opacity-50 uppercase tracking-widest leading-relaxed">
+                                        Based on 70% LTV of Bitcoin at ${BTC_PRICE.toLocaleString()}
+                                    </p>
                                 </div>
                             </div>
                         )}

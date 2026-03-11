@@ -210,36 +210,52 @@ async function handleCollateralLocked(event: StacksEvent): Promise<boolean> {
 }
 
 async function markActiveOnStacks(nonce: number): Promise<void> {
+    // Helper to safely parse JSON from Stacks API responses
+    async function safeJson(res: Response, label: string): Promise<any | null> {
+        const text = await res.text();
+        try {
+            return JSON.parse(text);
+        } catch {
+            console.warn(`mark-credit-active [${label}]: Non-JSON response from Stacks API (HTTP ${res.status}): ${text.slice(0, 80)}`);
+            return null;
+        }
+    }
+
     try {
-        // Find owner for this nonce to check current state
+        // Step 1: Resolve owner for this nonce
         let owner = "";
         const body = JSON.stringify({ sender: CONFIG.VAULT_ADDRESS, arguments: [cvToHex(uintCV(nonce))] });
         const res = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-owner-by-nonce`, {
             method: "POST", headers: { "Content-Type": "application/json" }, body
         });
-        const data: any = await res.json();
-        if (data.okay && data.result) {
+        const data = await safeJson(res, "get-owner-by-nonce");
+        if (data?.okay && data.result) {
             const cv = deserializeCV(Buffer.from(data.result.slice(2), "hex"));
             const json: any = cvToJSON(cv);
-            owner = json.value?.value?.owner?.value || "";
+            // Handle optional wrapper
+            const inner = json.type?.startsWith("(optional") ? json.value?.value : json.value;
+            owner = inner?.owner?.value || "";
         }
 
+        // Step 2: Check if credit-active is already set (avoid duplicate tx)
         if (owner) {
-            const vbody = JSON.stringify({ sender: owner, arguments: ["0x" + Buffer.from(serializeCV(standardPrincipalCV(owner))).toString("hex")] });
+            const vbody = JSON.stringify({ sender: owner, arguments: [cvToHex(standardPrincipalCV(owner))] });
             const vres = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-vault`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, body: vbody
             });
-            const vdata: any = await vres.json();
-            if (vdata.okay && vdata.result && vdata.result !== "0x09") {
+            const vdata = await safeJson(vres, "get-vault");
+            if (vdata?.okay && vdata.result && vdata.result !== "0x09") {
                 const vcv = deserializeCV(Buffer.from(vdata.result.slice(2), "hex"));
-                const vjson: any = cvToJSON(vcv);
-                if (vjson.value["credit-active"].value) {
+                let vjson: any = cvToJSON(vcv);
+                if (vjson.type?.startsWith("(optional")) vjson = vjson.value; // unwrap optional
+                if (vjson?.value?.["credit-active"]?.value === true) {
                     console.log(`Vault for nonce ${nonce} already marked active on Stacks. Skipping broadcast.`);
                     return;
                 }
             }
         }
 
+        // Step 3: Broadcast mark-credit-active
         const tx = await makeContractCall({
             contractAddress: CONFIG.VAULT_ADDRESS,
             contractName: CONFIG.VAULT_NAME,
@@ -271,10 +287,13 @@ let lastBlock = 0;
 
 export async function listenForCreditLineClosed(): Promise<void> {
     try {
-        lastBlock = await provider.getBlockNumber();
-        console.log(`Listening for EVM events from block ${lastBlock}`);
+        const networkBlock = await provider.getBlockNumber();
+        // Look back 50 blocks on startup to catch anything missed during downtime
+        lastBlock = networkBlock - 50;
+        console.log(`Listening for EVM events from block ${lastBlock} (Network tip: ${networkBlock})`);
     } catch (e: any) {
         console.error("Failed to get block number:", e.message);
+        lastBlock = 0;
     }
 
     setInterval(async () => {
@@ -286,7 +305,7 @@ export async function listenForCreditLineClosed(): Promise<void> {
             for (const event of events) {
                 if (event instanceof ethers.EventLog) {
                     const nonce = Number(event.args[2]);
-                    console.log(`\nCreditLineClosed: nonce=${nonce}`);
+                    console.log(`\nCreditLineClosed on EVM detected: nonce=${nonce} tx=${event.transactionHash}`);
                     await releaseStacksCollateral(nonce);
                 }
             }
@@ -294,10 +313,11 @@ export async function listenForCreditLineClosed(): Promise<void> {
         } catch (e: any) {
             console.error("EVM poll error:", e.message);
         }
-    }, CONFIG.POLL_INTERVAL_MS);
+    }, 15_000); // Poll every 15s instead of using the config interval if it's too frequent
 }
 
 export async function releaseStacksCollateral(nonce: number): Promise<void> {
+    console.log(`Attempting to release Stacks collateral for nonce: ${nonce}`);
     let owner = "";
     try {
         const body = JSON.stringify({
@@ -305,68 +325,56 @@ export async function releaseStacksCollateral(nonce: number): Promise<void> {
             arguments: [cvToHex(uintCV(nonce))]
         });
         const res = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-owner-by-nonce`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body
+            method: "POST", headers: { "Content-Type": "application/json" }, body
         });
         const data: any = await res.json();
-        const hex = data?.result || "";
-        if (!hex.startsWith("0x")) {
-            console.error(`Unexpected data format for nonce ${nonce}: ${hex}`);
+
+        if (!data.okay || !data.result) {
+            console.error(`Vault lookup failed for nonce ${nonce}: ${JSON.stringify(data)}`);
             return;
         }
 
-        // Use a more robust way to extract the principal if possible, 
-        // but given the urgency, I'll use the stacks transaction library to deserialize if I can.
-        // For now, I'll try to get 'repr' if available, or use the hex.
-        // Wait, the API response for call-read SHOULD have a 'repr' if requested correctly, 
-        // but here it only has 'result'.
+        const cv = deserializeCV(Buffer.from(data.result.slice(2), "hex"));
+        let json: any = cvToJSON(cv);
 
-        // Let's decode the hex. Principal starts with 0x05 (or 0x0a0c...0x05 for optional tuple)
-        // Manual extraction for testnet principals (21 bytes address + 1 byte type)
-        // 0x05 1a <20 bytes>
-        const principalIdx = hex.indexOf("051a");
-        if (principalIdx !== -1) {
-            const principalHex = hex.slice(principalIdx, principalIdx + 44);
-            // We need to convert this to a string principal.
-            // Actually, I'll just use the cvToHex/hexToCV logic if I had it.
-            // I'll use a hacky but effective way for now: 
-            // Call a different endpoint or use the Hiro 'repr' if possible.
-
-            // Wait, I can just use get-vault-by-nonce and see if it has 'repr'?
-            // No, I'll just fix the parsing.
+        // Robust principal extraction from optional/tuple
+        let rawVal = json.value;
+        if (json.type.startsWith("(optional")) {
+            if (!json.value) { console.error(`Nonce ${nonce} has no owner record (None)`); return; }
+            rawVal = json.value.value;
+        } else {
+            rawVal = json.value;
         }
 
-        // Better: HIRO API often returns 'repr' if you use the extended API or look at the right field.
-        // Actually, let's just use the 'stacks-transactions' deserialize.
-        const cv = deserializeCV(Buffer.from(hex.slice(2), "hex"));
-        const json: any = cvToJSON(cv);
-
-        // cvToJSON structure: { type: 'optional', value: { type: 'tuple', value: { owner: { type: 'principal', value: '...' } } } }
-        let rawVal = json.value;
-        if (json.type === "optional" || json.type === 10) rawVal = json.value;
-
-        if (rawVal && rawVal.value && rawVal.value.owner) {
-            owner = rawVal.value.owner.value || rawVal.value.owner;
-        } else if (rawVal && rawVal.owner) {
+        if (rawVal && rawVal.owner) {
             owner = rawVal.owner.value || rawVal.owner;
         }
 
-        if (typeof owner !== 'string' || !owner.startsWith('ST')) {
-            console.error(`Parsed owner invalid for nonce ${nonce}. raw: ${JSON.stringify(json)}`);
-            owner = "";
-        }
-
-        if (!owner) {
-            console.error(`No owner found for nonce ${nonce}. CV JSON: ${JSON.stringify(json)}`);
+        if (!owner || typeof owner !== "string" || !owner.startsWith("ST")) {
+            console.error(`Principal extraction failed for nonce ${nonce}. JSON: ${JSON.stringify(json)}`);
             return;
         }
-    } catch (e: any) {
-        console.error(`get-owner-by-nonce failed: ${e.message}`);
-        return;
-    }
 
-    try {
+        // Check if already released to avoid waste
+        const checkBody = JSON.stringify({
+            sender: owner,
+            arguments: [cvToHex(standardPrincipalCV(owner))]
+        });
+        const checkRes = await fetch(`${CONFIG.STACKS_API}/v2/contracts/call-read/${CONFIG.VAULT_ADDRESS}/${CONFIG.VAULT_NAME}/get-vault`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: checkBody
+        });
+        const checkData = await checkRes.json() as any;
+        if (checkData.okay && checkData.result && checkData.result !== "0x09") {
+            const vcv = deserializeCV(Buffer.from(checkData.result.slice(2), "hex"));
+            let vjson: any = cvToJSON(vcv);
+            if (vjson.type.startsWith("(optional")) vjson = vjson.value;
+            if (vjson && vjson.value && vjson.value.released?.value === true) {
+                console.log(`Vault for ${owner} (nonce ${nonce}) already released on Stacks. Skipping.`);
+                return;
+            }
+        }
+
+        console.log(`Releasing sBTC to ${owner} for nonce ${nonce}...`);
         const tx = await makeContractCall({
             contractAddress: CONFIG.VAULT_ADDRESS,
             contractName: CONFIG.VAULT_NAME,
@@ -377,8 +385,12 @@ export async function releaseStacksCollateral(nonce: number): Promise<void> {
             postConditionMode: PostConditionMode.Allow,
         });
         const result = await broadcastTransaction({ transaction: tx });
-        console.log(`✓ release-collateral broadcast: ${result.txid || JSON.stringify(result)}`);
-    } catch (err: any) {
-        console.error(`✗ release-collateral failed: ${err.message}`);
+        if ("txid" in result) {
+            console.log(`✓ release-collateral broadcast: ${result.txid}`);
+        } else {
+            console.error(`✗ broadcast failed: ${JSON.stringify(result)}`);
+        }
+    } catch (e: any) {
+        console.error(`releaseStacksCollateral failed: ${e.message}`);
     }
 }

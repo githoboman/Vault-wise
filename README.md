@@ -1,6 +1,6 @@
 # BitCredit: Cross-Chain Bitcoin-Backed Liquid Credit
 
-BitCredit is a minimalist, high-fidelity DeFi protocol that unlocks Bitcoin liquidity through cross-chain credit lines. By locking **sBTC** on the Stacks network, users instantly establish a **Credit Power NFT** on the Creditcoin (CTC) network, allowing them to borrow real stablecoins against their reputation.
+BitCredit is a high-fidelity DeFi protocol that unlocks Bitcoin liquidity through cross-chain credit lines. By locking **sBTC** on the Stacks network, users instantly establish a **Credit Power NFT** on the Creditcoin (CTC) network, allowing them to borrow real stablecoins against their reputation.
 
 ---
 
