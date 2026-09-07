@@ -88,7 +88,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const checkSponsorability = useCallback(async (): Promise<boolean> => {
-        if (!evmAddress || !window.ethereum) return false;
+        if (!evmAddress || !(window as any).ethereum) return false;
         try {
             const response = await fetch("https://rpc.bohr.life", {
                 method: "POST",
