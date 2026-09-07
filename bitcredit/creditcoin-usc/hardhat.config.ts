@@ -9,9 +9,9 @@ const config: HardhatUserConfig = {
         settings: { optimizer: { enabled: true, runs: 200 } }
     },
     networks: {
-        creditcoin_testnet: {
-            url: "https://rpc.usc-testnet.creditcoin.network",
-            chainId: 102033,
+        botchain_testnet: {
+            url: "https://rpc.bohr.life",
+            chainId: 968,
             accounts: process.env.EVM_PRIVATE_KEY ? [process.env.EVM_PRIVATE_KEY] : []
         },
         hardhat: { chainId: 31337 }

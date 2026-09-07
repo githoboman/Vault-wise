@@ -1,8 +1,7 @@
 import { ethers } from "ethers";
 
-const rpcUrl = "https://rpc.usc-testnet.creditcoin.network";
-// Also checking alternative if the first fails
-// const rpcUrl = "https://rpc.usc.testnet.creditcoin.network";
+const rpcUrl = "https://rpc.bohr.life";
+// const rpcUrl = "https://rpc.bohr.life";
 
 const privateKey = "0x20e67fdeec594589ecbbba9cb3a57c123aa3d77786cd3622f883df881dcd33a0";
 

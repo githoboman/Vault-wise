@@ -16,9 +16,9 @@ contract BitCreditUSC is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     struct CreditLine {
         address borrower;
-        string  stacksOwner;
-        uint256 collateralSats;
-        uint256 stacksNonce;
+        string  collateralOwner;
+        uint256 collateralAmount;
+        uint256 btcNonce;
         uint256 creditPowerUSD;
         uint256 issuedAt;
         bool    active;
@@ -36,12 +36,12 @@ contract BitCreditUSC is ERC721Enumerable, Ownable, ReentrancyGuard {
     event AttestorRemoved(address indexed attestor);
     event CreditLineIssued(
         uint256 indexed tokenId, address indexed borrower,
-        string stacksOwner, uint256 stacksNonce,
-        uint256 collateralSats, uint256 creditPowerUSD
+        string collateralOwner, uint256 btcNonce,
+        uint256 collateralAmount, uint256 creditPowerUSD
     );
     event LoanDisbursed(uint256 indexed tokenId, uint256 amountUSD, string borrowerRef);
     event LoanRepaid(uint256 indexed tokenId, uint256 amountUSDCents);
-    event CreditLineClosed(uint256 indexed tokenId, address indexed borrower, uint256 stacksNonce);
+    event CreditLineClosed(uint256 indexed tokenId, address indexed borrower, uint256 btcNonce);
     event BtcPriceUpdated(uint256 newPriceUSD);
 
     modifier onlyAttestor() {
@@ -56,31 +56,31 @@ contract BitCreditUSC is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     function attestAndIssueCreditLine(
-        address borrower, string calldata stacksOwner,
-        uint256 stacksNonce, uint256 collateralSats
+        address borrower, string calldata collateralOwner,
+        uint256 btcNonce, uint256 collateralAmount
     ) external onlyAttestor nonReentrant returns (uint256 tokenId) {
         require(borrower != address(0),           "BitCreditUSC: zero borrower address");
-        require(collateralSats > 0,               "BitCreditUSC: collateral must be non-zero");
-        require(nonceToTokenId[stacksNonce] == 0, "BitCreditUSC: nonce already used");
+        require(collateralAmount > 0,             "BitCreditUSC: collateral must be non-zero");
+        require(nonceToTokenId[btcNonce] == 0,    "BitCreditUSC: nonce already used");
         require(activeCreditLine[borrower] == 0,  "BitCreditUSC: borrower already has active credit line");
 
-        uint256 creditPowerUSD = (collateralSats * btcPriceUSD * LTV_NUM) / (1e8 * LTV_DENOM);
+        uint256 creditPowerUSD = (collateralAmount * btcPriceUSD * LTV_NUM) / (1e8 * LTV_DENOM);
 
         _tokenIds.increment();
         tokenId = _tokenIds.current();
         _safeMint(borrower, tokenId);
 
         creditLines[tokenId] = CreditLine({
-            borrower: borrower, stacksOwner: stacksOwner,
-            collateralSats: collateralSats, stacksNonce: stacksNonce,
+            borrower: borrower, collateralOwner: collateralOwner,
+            collateralAmount: collateralAmount, btcNonce: btcNonce,
             creditPowerUSD: creditPowerUSD, issuedAt: block.timestamp,
             active: true, loansDisbursed: 0, totalRepaidCents: 0
         });
 
-        nonceToTokenId[stacksNonce] = tokenId;
+        nonceToTokenId[btcNonce] = tokenId;
         activeCreditLine[borrower]  = tokenId;
 
-        emit CreditLineIssued(tokenId, borrower, stacksOwner, stacksNonce, collateralSats, creditPowerUSD);
+        emit CreditLineIssued(tokenId, borrower, collateralOwner, btcNonce, collateralAmount, creditPowerUSD);
     }
 
     function recordDisbursement(uint256 tokenId, uint256 amountUSD, string calldata borrowerRef)
@@ -100,7 +100,7 @@ contract BitCreditUSC is ERC721Enumerable, Ownable, ReentrancyGuard {
     function closeCreditLine(uint256 tokenId) external onlyAttestor {
         CreditLine storage cl = creditLines[tokenId];
         require(cl.active, "BitCreditUSC: credit line already closed");
-        uint256 nonce    = cl.stacksNonce;
+        uint256 nonce    = cl.btcNonce;
         address borrower = cl.borrower;
         cl.active                  = false;
         activeCreditLine[borrower] = 0;

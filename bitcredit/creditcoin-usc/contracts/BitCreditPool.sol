@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface IBitCreditUSC {
     struct CreditLine {
         address borrower;
-        string stacksOwner;
-        uint256 collateralSats;
-        uint256 stacksNonce;
+        string collateralOwner;
+        uint256 collateralAmount;
+        uint256 btcNonce;
         uint256 creditPowerUSD;
         uint256 issuedAt;
         bool active;

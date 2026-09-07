@@ -38,7 +38,7 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-lg md:text-2xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-12 font-medium leading-relaxed">
-                    Unlock immediate liquidity without selling your BTC. BitCredit bridges Stacks Bitcoin collateral into Creditcoin lending markets—allowing you to mint Credit Power securely and build on-chain reputation.
+                    Unlock immediate liquidity without selling your BTC. BitCredit bridges your Bitcoin collateral directly into BOT Chain lending markets—allowing you to mint Credit Power securely and build on-chain reputation.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -89,7 +89,7 @@ export default function LandingPage() {
                         </div>
                         <h4 className="text-xl font-bold mb-3 dark:text-white">1. Deposit & Lock</h4>
                         <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                            Securely lock your sBTC in a non-custodial Stacks vault. You keep your Bitcoin on-chain, but it's now 'reserved' to back your new line of credit.
+                            Securely lock your MockBTC in a non-custodial smart contract on BOT Chain. You keep your Bitcoin collateral on-chain, but it's now 'reserved' to back your new line of credit.
                         </p>
                     </div>
 
@@ -98,9 +98,9 @@ export default function LandingPage() {
                         <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-center mb-6 text-black dark:text-white">
                             <Repeat className="w-7 h-7" />
                         </div>
-                        <h4 className="text-xl font-bold mb-3 dark:text-white">2. Bridge to Creditcoin</h4>
+                        <h4 className="text-xl font-bold mb-3 dark:text-white">2. Bridge to BOT Chain</h4>
                         <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                            Our protocol automatically verifies your deposit on Stacks and 'unlocks' its equivalent value on the Creditcoin network as lending power.
+                            Our protocol instantly verifies your deposit and 'unlocks' its equivalent value on the BOT Chain network as lending power.
                         </p>
                     </div>
 
@@ -129,7 +129,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Creditcoin Ecosystem Section */}
+            {/* BOT Chain Ecosystem Section */}
             <section className="bg-gray-50 dark:bg-[#050505] py-32 border-y border-gray-100 dark:border-white/5 transition-colors duration-300">
                 <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
                     <div>
@@ -137,24 +137,24 @@ export default function LandingPage() {
                             <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center text-orange-600 dark:text-orange-400">
                                 <TrendingUp className="w-6 h-6" />
                             </div>
-                            <h2 className="text-sm font-black text-orange-500 tracking-widest uppercase">The CTC Synergy</h2>
+                            <h2 className="text-sm font-black text-orange-500 tracking-widest uppercase">The BOT Synergy</h2>
                         </div>
                         <h3 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8">
                             Empowering the <br className="hidden sm:block" />
-                            <span className="text-orange-500">Creditcoin Ecosystem</span>
+                            <span className="text-orange-500">BOT Chain Ecosystem</span>
                         </h3>
                         <div className="space-y-6 text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
                             <p>
-                                BitCredit isn't just a bridge—it's a massive liquidity catalyst for the **Creditcoin (CTC)** network. By using CTC as our settlement and reputation layer, we bring real-world utility to the L1.
+                                BitCredit isn't just a bridge—it's a massive liquidity catalyst for the **BOT Chain** network. By using BOT as our settlement and reputation layer, we bring real-world utility to the L1.
                             </p>
                             <ul className="space-y-4">
                                 <li className="flex gap-3">
                                     <div className="mt-1.5 w-1.5 h-1.5 bg-orange-500 rounded-full shrink-0"></div>
-                                    <span>**On-Chain Reputation**: Every loan repayment increases your credit score recorded immutably on the Creditcoin ledger.</span>
+                                    <span>**On-Chain Reputation**: Every loan repayment increases your credit score recorded immutably on the BOT Chain ledger.</span>
                                 </li>
                                 <li className="flex gap-3">
                                     <div className="mt-1.5 w-1.5 h-1.5 bg-orange-500 rounded-full shrink-0"></div>
-                                    <span>**L1 Utility**: BitCredit drives transaction volume and network demand for CTC, strengthening the security of the entire credit ecosystem.</span>
+                                    <span>**L1 Utility**: BitCredit drives transaction volume and network demand for BOT, strengthening the security of the entire credit ecosystem.</span>
                                 </li>
                                 <li className="flex gap-3">
                                     <div className="mt-1.5 w-1.5 h-1.5 bg-orange-500 rounded-full shrink-0"></div>
@@ -168,8 +168,8 @@ export default function LandingPage() {
                         <div className="relative bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 p-10 rounded-[2.5rem] shadow-2xl dark:shadow-none transition-all duration-500">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-bold">CTC</div>
-                                    <span className="font-bold text-gray-900 dark:text-white">Creditcoin Network</span>
+                                    <div className="w-10 h-10 bg-black dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black font-bold">BOT</div>
+                                    <span className="font-bold text-gray-900 dark:text-white">BOT Chain Network</span>
                                 </div>
                                 <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold rounded-full">ACTIVE</span>
                             </div>
@@ -200,7 +200,7 @@ export default function LandingPage() {
                     <ShieldCheck className="w-16 h-16 mx-auto mb-8 text-orange-500" />
                     <h3 className="text-3xl md:text-5xl font-black tracking-tight mb-6">Fully Verifiable On-Chain</h3>
                     <p className="text-gray-400 text-xl font-medium max-w-2xl mx-auto mb-12">
-                        No off-chain ledgers. Your collateral is protected by Bitcoin-level finality, while your credit history lives permanently and immutably on Creditcoin.
+                        No off-chain ledgers. Your collateral is protected by Bitcoin-level finality, while your credit history lives permanently and immutably on BOT Chain.
                     </p>
                     <Link href="/dashboard" className="inline-flex items-center gap-2 text-lg font-bold bg-white text-black px-10 py-4 rounded-full hover:bg-gray-100 transition-colors">
                         Get Started Now <ArrowRight className="w-5 h-5" />
