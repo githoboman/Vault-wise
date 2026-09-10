@@ -1,0 +1,13 @@
+BOT Chain Mainnet - Deployed Smart Contracts
+
+1. BitCredit Protocol (Core Lending Contract)
+Address: 0xDfA7e0E2b26E1752bCb4fa15f0Ad616933ccD3ef
+Explorer Link: https://scan.botchain.ai/address/0xDfA7e0E2b26E1752bCb4fa15f0Ad616933ccD3ef
+
+2. MockBTC (Wrapped Bitcoin Collateral Token)
+Address: 0xfF4c8f1109456c6791C5deDFf066dF5a7c6415d0
+Explorer Link: https://scan.botchain.ai/address/0xfF4c8f1109456c6791C5deDFf066dF5a7c6415d0
+
+3. MockUSDT (Stablecoin Borrowing Token)
+Address: 0xCC3a1279B6d9A1AB68A15C7Cd29DB35a4913E531
+Explorer Link: https://scan.botchain.ai/address/0xCC3a1279B6d9A1AB68A15C7Cd29DB35a4913E531

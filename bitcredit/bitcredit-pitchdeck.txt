@@ -1,0 +1,54 @@
+=========================================================
+BITCREDIT PITCH DECK
+"Borrow USD. Keep Your Bitcoin."
+=========================================================
+
+1. THE PROBLEM
+Bitcoin is the most valuable and widely held asset in crypto, yet the vast majority of it sits idle in cold storage. 
+When Bitcoin holders need liquidity (cash) for real-world expenses or new investments, they are forced to sell their BTC. 
+Selling triggers taxable events, incurs exchange fees, and eliminates their exposure to Bitcoin's future price appreciation.
+
+2. THE SOLUTION
+BitCredit is a fully decentralized, EVM-compatible lending protocol built natively on the BOT Chain.
+We allow users to deposit their Wrapped Bitcoin (or equivalent bridged BTC) into a non-custodial smart contract to instantly mint a credit line.
+Users can borrow USDC stablecoins against their Bitcoin collateral without ever selling it—completely tax-free.
+
+3. WHY BOT CHAIN?
+- High Performance & Low Fees: BitCredit requires instant, cheap transactions to manage liquidations and price oracle updates. BOT Chain provides the perfect EVM execution environment.
+- Liquidity Sink: BitCredit will act as a massive "black hole" for Bitcoin liquidity, directly driving Total Value Locked (TVL) onto the BOT Chain network.
+- Gas Consumption: Every deposit, borrow, and repayment action burns BOT for gas, creating constant, organic demand for the native token.
+
+4. CORE PROTOCOL MECHANICS
+- Over-Collateralization: The protocol enforces a strict 70% Maximum Loan-to-Value (LTV) ratio. For every $10,000 of BTC deposited, a user can borrow a maximum of $7,000.
+- Instant Settlements: No slow cross-chain bridges. Once the BTC is on BOT Chain, borrowing and repaying happens in seconds.
+- Trustless & Transparent: All collateral is held in audited smart contracts.
+
+5. BUSINESS & REVENUE MODEL
+BitCredit is designed to be financially sustainable from day one:
+- Origination Fee: The protocol charges a hardcoded 1% fee on all new loans. If a user borrows 1,000 USDC, the protocol keeps 10 USDC as revenue.
+- Liquidation Penalties: In the event of a market crash, undercollateralized loans are liquidated with a built-in penalty fee that goes to the protocol treasury.
+- Ecosystem Alignment: Revenue can be shared with the BOT Chain DAO or used to buy back BOT tokens.
+
+6. THE INNOVATION: ON-CHAIN REPUTATION
+BitCredit introduces a native Web3 Credit Score. 
+As users borrow and reliably repay their debt, their immutable on-chain credit score increases (+1 point per $1 repaid, capped at 850). 
+In the future, high-score users will unlock VIP perks:
+- Lower origination fees
+- Higher LTV ratios (undercollateralized lending)
+- Ecosystem-wide identity verification
+
+7. ROADMAP & MILESTONES
+- Phase 1: MVP & Architecture Design (Completed)
+- Phase 2: BOT Chain Testnet Deployment & Audits (Current Stage)
+- Phase 3: Mainnet Launch & Community Growth
+- Phase 4: Integration with major BOT Chain DEXs for liquidations
+- Phase 5: Multi-asset collateral (ETH, BOT, etc.)
+
+8. TEAM & CONTACT
+Project Name: BitCredit
+Contact Name: Ayomi Olaosebikan
+Email: olaosebikanayomi8@gmail.com
+GitHub: https://github.com/githoboman/Vault-wise
+
+"BitCredit: Building the Financial Layer for Bitcoin on the BOT Chain."
+=========================================================

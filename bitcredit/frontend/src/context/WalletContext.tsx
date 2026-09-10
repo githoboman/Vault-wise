@@ -16,8 +16,8 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType>({} as WalletContextType);
 
-const BOT_CHAIN_CHAIN_ID = "0x3c8"; // 968
-const BOT_CHAIN_CHAIN_ID_NAME = "BOT Chain Testnet";
+const BOT_CHAIN_CHAIN_ID = "0x2a5"; // 677
+const BOT_CHAIN_CHAIN_ID_NAME = "BOT Chain Mainnet";
 
 export function WalletProvider({ children }: { children: ReactNode }) {
     const [evmAddress, setEvmAddress] = useState<string | null>(null);
@@ -61,8 +61,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                             chainId: BOT_CHAIN_CHAIN_ID,
                             chainName: BOT_CHAIN_CHAIN_ID_NAME,
                             nativeCurrency: { name: "BOT", symbol: "BOT", decimals: 18 },
-                            rpcUrls: ["https://rpc.bohr.life"],
-                            blockExplorerUrls: ["https://scan.bohr.life/"],
+                            rpcUrls: ["https://rpc.botchain.ai"],
+                            blockExplorerUrls: ["https://scan.botchain.ai/"],
                         }]
                     });
                 }
@@ -90,7 +90,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const checkSponsorability = useCallback(async (): Promise<boolean> => {
         if (!evmAddress || !(window as any).ethereum) return false;
         try {
-            const response = await fetch("https://rpc.bohr.life", {
+            const response = await fetch("https://rpc.botchain.ai", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

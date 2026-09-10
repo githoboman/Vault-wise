@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 const POOL_ADDR = process.env.NEXT_PUBLIC_POOL_ADDRESS || "";
 const BTC_ADDR = process.env.NEXT_PUBLIC_BTC_ADDRESS || process.env.NEXT_PUBLIC_MOCK_BTC_ADDRESS || "";
-const USDC_ADDR = process.env.NEXT_PUBLIC_USDC_ADDRESS || process.env.NEXT_PUBLIC_MOCK_USDC_ADDRESS || "";
+const USDT_ADDR = process.env.NEXT_PUBLIC_USDT_ADDRESS || process.env.NEXT_PUBLIC_MOCK_USDT_ADDRESS || "";
 
 const PROTOCOL_ABI = [
     "function depositCollateral(uint256 amountSats) external",
@@ -35,7 +35,7 @@ export default function Dashboard() {
     const { evmAddress, connectEVM, disconnect, isFullyConnected, provider, signer } = useWallet();
     
     const [btcBalance, setBtcBalance] = useState("0");
-    const [usdcBalance, setUsdcBalance] = useState("0");
+    const [USDTBalance, setUSDTBalance] = useState("0");
     
     const [collateralSats, setCollateralSats] = useState<bigint>(0n);
     const [amountBorrowedUSD, setAmountBorrowedUSD] = useState<bigint>(0n);
@@ -53,14 +53,14 @@ export default function Dashboard() {
         if (!evmAddress || !provider) return;
         try {
             const btc = new ethers.Contract(BTC_ADDR, ERC20_ABI, provider);
-            const usdc = new ethers.Contract(USDC_ADDR, ERC20_ABI, provider);
+            const USDT = new ethers.Contract(USDT_ADDR, ERC20_ABI, provider);
             const protocol = new ethers.Contract(POOL_ADDR, PROTOCOL_ABI, provider);
 
             const bBal = await btc.balanceOf(evmAddress);
             setBtcBalance(parseFloat(ethers.formatUnits(bBal, 8)).toFixed(4));
             
-            const uBal = await usdc.balanceOf(evmAddress);
-            setUsdcBalance(parseFloat(ethers.formatUnits(uBal, 18)).toFixed(2));
+            const uBal = await USDT.balanceOf(evmAddress);
+            setUSDTBalance(parseFloat(ethers.formatUnits(uBal, 18)).toFixed(2));
 
             const [state, avail] = await protocol.getUserState(evmAddress);
             setCollateralSats(state.collateralSats);
@@ -137,12 +137,12 @@ export default function Dashboard() {
         setTxLoading(true); setErrorMsg("");
         try {
             const protocol = new ethers.Contract(POOL_ADDR, PROTOCOL_ABI, signer);
-            const usdc = new ethers.Contract(USDC_ADDR, ERC20_ABI, signer);
+            const USDT = new ethers.Contract(USDT_ADDR, ERC20_ABI, signer);
             
             const amt18 = ethers.parseUnits(repayAmount, 18);
-            const allowance = await usdc.allowance(evmAddress, POOL_ADDR);
+            const allowance = await USDT.allowance(evmAddress, POOL_ADDR);
             if (allowance < amt18) {
-                const txApprove = await usdc.approve(POOL_ADDR, ethers.MaxUint256);
+                const txApprove = await USDT.approve(POOL_ADDR, ethers.MaxUint256);
                 await txApprove.wait();
             }
             const tx = await protocol.repay(BigInt(repayAmount));
@@ -187,7 +187,7 @@ export default function Dashboard() {
             <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <div className="mb-12">
                     <h1 className="text-3xl md:text-4xl font-extrabold">BOT Chain Lending</h1>
-                    <p className="text-gray-500 mt-2">Deposit Wrapped BTC to instantly open a credit line and borrow USDC.</p>
+                    <p className="text-gray-500 mt-2">Deposit Wrapped BTC to instantly open a credit line and borrow USDT.</p>
                 </div>
 
                 {errorMsg && (
@@ -206,8 +206,8 @@ export default function Dashboard() {
                                 <span className="font-mono">{btcBalance} BTC</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-500">USDC</span>
-                                <span className="font-mono">{usdcBalance} USDC</span>
+                                <span className="text-gray-500">USDT</span>
+                                <span className="font-mono">{USDTBalance} USDT</span>
                             </div>
                         </div>
 
@@ -249,7 +249,7 @@ export default function Dashboard() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="p-6 bg-gray-50 dark:bg-white/5 rounded-2xl">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="font-bold">Borrow USDC</h3>
+                                            <h3 className="font-bold">Borrow USDT</h3>
                                             <span className="text-[10px] text-gray-500 uppercase tracking-widest bg-gray-200 dark:bg-white/10 px-2 py-1 rounded-md">1% Origination Fee</span>
                                         </div>
                                         <input type="number" value={borrowAmount} onChange={e => setBorrowAmount(e.target.value)} placeholder="Amount to borrow" className="w-full bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 mb-4 outline-none focus:border-green-500 transition-colors" />
@@ -258,7 +258,7 @@ export default function Dashboard() {
                                         </button>
                                     </div>
                                     <div className="p-6 bg-gray-50 dark:bg-white/5 rounded-2xl">
-                                        <h3 className="font-bold mb-4">Repay USDC</h3>
+                                        <h3 className="font-bold mb-4">Repay USDT</h3>
                                         <input type="number" value={repayAmount} onChange={e => setRepayAmount(e.target.value)} placeholder="Amount to repay" className="w-full bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 mb-4 outline-none focus:border-orange-500 transition-colors" />
                                         <button onClick={handleRepay} disabled={txLoading || !repayAmount} className="w-full py-3 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-xl font-bold transition-colors disabled:opacity-50">
                                             Repay

@@ -14,6 +14,11 @@ const config: HardhatUserConfig = {
             chainId: 968,
             accounts: process.env.EVM_PRIVATE_KEY ? [process.env.EVM_PRIVATE_KEY] : []
         },
+        botchain_mainnet: {
+            url: process.env.BOTCHAIN_MAINNET_RPC || "",
+            chainId: parseInt(process.env.BOTCHAIN_MAINNET_CHAIN_ID || "0"),
+            accounts: process.env.EVM_PRIVATE_KEY ? [process.env.EVM_PRIVATE_KEY] : []
+        },
         hardhat: { chainId: 31337 }
     }
 };

@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BitCreditProtocol is ReentrancyGuard, Ownable {
     IERC20 public immutable btcToken; // Collateral (e.g. Wrapped BTC with 8 decimals)
-    IERC20 public immutable usdcToken; // Borrowed asset (USDC with 18 decimals)
+    IERC20 public immutable USDTToken; // Borrowed asset (USDT with 18 decimals)
 
     uint256 public constant BTC_DECIMALS = 1e8;
-    uint256 public constant USDC_DECIMALS = 1e18;
+    uint256 public constant USDT_DECIMALS = 1e18;
     
     // Dynamic BTC Price in USD
     uint256 public btcPriceUSD;
@@ -24,7 +24,7 @@ contract BitCreditProtocol is ReentrancyGuard, Ownable {
 
     struct UserState {
         uint256 collateralSats;       // Deposited BTC in satoshis (8 decimals)
-        uint256 amountBorrowedUSD;    // Borrowed USDC in whole dollars (Principal)
+        uint256 amountBorrowedUSD;    // Borrowed USDT in whole dollars (Principal)
         uint256 amountRepaidCents;    // Total repaid in cents (used for credit score)
         uint256 creditScore;          // On-chain credit score
     }
@@ -34,14 +34,14 @@ contract BitCreditProtocol is ReentrancyGuard, Ownable {
     event CollateralDeposited(address indexed user, uint256 amountSats);
     event CollateralWithdrawn(address indexed user, uint256 amountSats);
     event Borrowed(address indexed user, uint256 amountUSD, uint256 feeUSD);
-    event Repaid(address indexed user, uint256 amountUSDCents, uint256 newCreditScore);
+    event Repaid(address indexed user, uint256 amountUSDTents, uint256 newCreditScore);
     event PriceUpdated(uint256 newPrice);
     event FeesWithdrawn(uint256 amount);
 
-    constructor(address _btcToken, address _usdcToken, uint256 _initialBtcPrice) {
-        require(_btcToken != address(0) && _usdcToken != address(0), "Zero address");
+    constructor(address _btcToken, address _USDTToken, uint256 _initialBtcPrice) {
+        require(_btcToken != address(0) && _USDTToken != address(0), "Zero address");
         btcToken = IERC20(_btcToken);
-        usdcToken = IERC20(_usdcToken);
+        USDTToken = IERC20(_USDTToken);
         btcPriceUSD = _initialBtcPrice;
     }
 
@@ -57,18 +57,18 @@ contract BitCreditProtocol is ReentrancyGuard, Ownable {
         uint256 amountToWithdraw = totalProtocolFeesCollected;
         require(amountToWithdraw > 0, "No fees to withdraw");
         totalProtocolFeesCollected = 0;
-        require(usdcToken.transfer(msg.sender, amountToWithdraw * USDC_DECIMALS), "Fee withdraw failed");
+        require(USDTToken.transfer(msg.sender, amountToWithdraw * USDT_DECIMALS), "Fee withdraw failed");
         emit FeesWithdrawn(amountToWithdraw);
     }
 
-    // Admin function to fund the pool with USDC for borrowing
+    // Admin function to fund the pool with USDT for borrowing
     function fundTreasury(uint256 amount) external onlyOwner {
-        require(usdcToken.transferFrom(msg.sender, address(this), amount), "Fund failed");
+        require(USDTToken.transferFrom(msg.sender, address(this), amount), "Fund failed");
     }
 
     // Admin function to withdraw from the treasury (not affecting collected fees)
     function withdrawTreasury(uint256 amount) external onlyOwner {
-        require(usdcToken.transfer(msg.sender, amount), "Withdraw failed");
+        require(USDTToken.transfer(msg.sender, amount), "Withdraw failed");
     }
 
     function calculateCreditPower(uint256 collateralSats) public view returns (uint256) {
@@ -135,7 +135,7 @@ contract BitCreditProtocol is ReentrancyGuard, Ownable {
         user.amountBorrowedUSD = newTotal;
         
         // Transfer the net amount to the user
-        require(usdcToken.transfer(msg.sender, netAmountUSD * USDC_DECIMALS), "USDC transfer failed");
+        require(USDTToken.transfer(msg.sender, netAmountUSD * USDT_DECIMALS), "USDT transfer failed");
 
         emit Borrowed(msg.sender, amountUSD, feeUSD);
     }
@@ -159,7 +159,7 @@ contract BitCreditProtocol is ReentrancyGuard, Ownable {
             user.creditScore += scoreIncrease;
         }
 
-        require(usdcToken.transferFrom(msg.sender, address(this), actualRepayUSD * USDC_DECIMALS), "USDC Transfer failed");
+        require(USDTToken.transferFrom(msg.sender, address(this), actualRepayUSD * USDT_DECIMALS), "USDT Transfer failed");
 
         emit Repaid(msg.sender, actualRepayCents, user.creditScore);
     }
