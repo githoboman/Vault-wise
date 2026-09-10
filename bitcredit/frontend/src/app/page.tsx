@@ -111,7 +111,7 @@ export default function LandingPage() {
                         </div>
                         <h4 className="text-xl font-bold mb-3 dark:text-white">3. Borrow & Repay</h4>
                         <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                            Withdraw real USDC against your Credit Power limit. Repay with interest to boost your on-chain credit score, unlocking even more liquidity over time.
+                            Withdraw real USDT against your Credit Power limit. Repay with interest to boost your on-chain credit score, unlocking even more liquidity over time.
                         </p>
                     </div>
 

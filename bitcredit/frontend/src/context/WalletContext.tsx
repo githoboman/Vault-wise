@@ -124,18 +124,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setIsGasless(sponsored);
 
         if (sponsored) {
-            const populated = await contract.interface.populateCallParams(
-                await contract.interface.encodeFunctionData(method, args)
-            );
+            const calldata = contract.interface.encodeFunctionData(method, args);
             const tx = await signer.sendTransaction({
                 to: contract.target,
-                data: populated.calldata,
+                data: calldata,
                 gasPrice: 0,
                 gasLimit: 500_000,
             });
             return await tx.wait();
         } else {
-            const tx = await contract.connect(signer)[method](...args);
+            const tx = await (contract.connect(signer) as any)[method](...args);
             return await tx.wait();
         }
     }, [signer, evmAddress, checkSponsorability]);
