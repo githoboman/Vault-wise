@@ -88,30 +88,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const checkSponsorability = useCallback(async (): Promise<boolean> => {
-        if (!evmAddress || !(window as any).ethereum) return false;
-        try {
-            const response = await fetch("https://rpc.botchain.ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    id: 1,
-                    method: "pm_isSponsorable",
-                    params: [{
-                        from: evmAddress,
-                        to: ethers.ZeroAddress,
-                        value: "0x0",
-                        data: "0x",
-                        gas: "0x0"
-                    }]
-                })
-            });
-            const result = await response.json();
-            return result?.result?.Sponsorable === true;
-        } catch {
-            return false;
-        }
-    }, [evmAddress]);
+        return false; // Disabled until official ERC4337 bundler is integrated
+    }, []);
 
     const sendGaslessTransaction = useCallback(async (
         contract: ethers.Contract,
@@ -119,24 +97,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         args: any[]
     ): Promise<any> => {
         if (!signer || !evmAddress) throw new Error("Wallet not connected");
+        setIsGasless(false);
 
-        const sponsored = await checkSponsorability();
-        setIsGasless(sponsored);
-
-        if (sponsored) {
-            const calldata = contract.interface.encodeFunctionData(method, args);
-            const tx = await signer.sendTransaction({
-                to: contract.target,
-                data: calldata,
-                gasPrice: 0,
-                gasLimit: 500_000,
-            });
-            return await tx.wait();
-        } else {
-            const tx = await (contract.connect(signer) as any)[method](...args);
-            return await tx.wait();
-        }
-    }, [signer, evmAddress, checkSponsorability]);
+        // Fallback to standard transaction on mainnet for stability
+        const tx = await (contract.connect(signer) as any)[method](...args);
+        return await tx.wait();
+    }, [signer, evmAddress]);
 
     const onAccountChange = useCallback((accounts: string[]) => {
         if (accounts.length > 0) setEvmAddress(accounts[0]);
