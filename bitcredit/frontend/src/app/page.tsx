@@ -196,13 +196,48 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="relative z-10 border-t border-white/10 py-12 text-center text-gray-500 font-medium">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                    <div className="w-6 h-6 bg-white/10 text-white rounded-md flex items-center justify-center text-xs font-bold">B</div>
-                    <span className="text-white font-bold tracking-wide">BitCredit</span>
+            {/* Footer / Partnerships */}
+            <footer className="relative z-10 border-t border-white/10 py-16 bg-[#030303]">
+                <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center justify-between text-center md:text-left">
+                    <div>
+                        <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                            <div className="w-6 h-6 bg-white/10 text-white rounded-md flex items-center justify-center text-xs font-bold">B</div>
+                            <span className="text-white font-bold tracking-wide">BitCredit</span>
+                        </div>
+                        <p className="text-gray-500 font-medium text-sm max-w-sm mx-auto md:mx-0">
+                            The decentralized credit protocol bringing Wrapped Bitcoin liquidity to high-performance networks.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col items-center md:items-end">
+                        <span className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-4">Built On</span>
+                        <div className="flex items-center gap-6">
+                            <a href="https://botchain.ai" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 bg-white/5 border border-white/10 hover:border-orange-500/50 hover:bg-white/10 px-6 py-3 rounded-2xl transition-all duration-300">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white">
+                                    {/* Simple abstract BOT Chain logo representation */}
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fillOpacity="0.2" />
+                                        <path d="M15.5 8.5C14.5 7.5 13.5 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17C13.5 17 14.5 16.5 15.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        <circle cx="16" cy="12" r="1.5" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <div className="flex flex-col text-left">
+                                    <span className="text-white font-bold leading-tight">BOT Chain</span>
+                                    <span className="text-xs text-orange-400 font-medium">Official Network</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div className="flex gap-4 mt-4 text-xs font-medium text-gray-500">
+                            <a href="https://botchain.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">botchain.ai</a>
+                            <span>•</span>
+                            <a href="https://scan.botchain.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">scan.botchain.ai</a>
+                        </div>
+                    </div>
                 </div>
-                <p>&copy; {new Date().getFullYear()} BitCredit Protocol. BOT Chain Mainnet.</p>
+                
+                <div className="max-w-6xl mx-auto px-6 mt-12 pt-8 border-t border-white/5 text-center text-gray-600 text-sm">
+                    &copy; {new Date().getFullYear()} BitCredit Protocol. Officially launched on BOT Chain Mainnet.
+                </div>
             </footer>
         </main>
     );
