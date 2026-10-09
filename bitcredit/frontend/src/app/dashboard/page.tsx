@@ -225,7 +225,7 @@ export default function Dashboard() {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Deposit */}
+            {/* Left Column: Deposit */}
                     <div className="space-y-6">
                         <div className="bg-white/5 backdrop-blur-xl p-8 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-orange-500/20 transition-colors duration-500"></div>
@@ -237,12 +237,29 @@ export default function Dashboard() {
                                 <input type="number" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} placeholder="0.00" className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-xl font-mono" />
                                 <span className="absolute right-4 top-4 text-gray-500 font-bold">bWBTC</span>
                             </div>
-                            <button onClick={handleDeposit} disabled={txLoading || !depositAmount} className="group relative w-full overflow-hidden rounded-xl disabled:opacity-50 disabled:cursor-not-allowed">
-                                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 transition-transform duration-300 group-hover:scale-105"></div>
-                                <div className="relative px-4 py-4 flex items-center justify-center gap-2 text-white font-bold shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
-                                    {txLoading ? "Processing..." : "Deposit & Open Line"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </div>
-                            </button>
+                            <div className="flex flex-col gap-3">
+                                <button onClick={handleDeposit} disabled={txLoading || !depositAmount} className="group relative w-full overflow-hidden rounded-xl disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 transition-transform duration-300 group-hover:scale-105"></div>
+                                    <div className="relative px-4 py-4 flex items-center justify-center gap-2 text-white font-bold shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all">
+                                        {txLoading ? "Processing..." : "Deposit & Open Line"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </button>
+                                <button onClick={async () => {
+                                    if(!signer) return;
+                                    setTxLoading(true); setErrorMsg("");
+                                    try {
+                                        const btc = new ethers.Contract(BTC_ADDR, ["function testnetDrip(address) external"], signer);
+                                        const tx = await btc.testnetDrip(evmAddress);
+                                        await tx.wait();
+                                        await loadUserData();
+                                    } catch(e:any) {
+                                        setErrorMsg(e.message || "Failed to claim BTC");
+                                    }
+                                    setTxLoading(false);
+                                }} disabled={txLoading} className="w-full py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl font-medium transition-colors text-sm border border-white/5">
+                                    Claim Testnet bWBTC Faucet
+                                </button>
+                            </div>
                         </div>
 
                         {/* Credit Score Teaser */}
